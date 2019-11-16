@@ -1,6 +1,6 @@
 defmodule TwitterClasses.Core do
-  def start_link() do
-    GenServer.start_link(__MODULE__, [])
+  def start_link(id) do
+    GenServer.start_link(__MODULE__, [id])
   end
 
   def init(init_args) do

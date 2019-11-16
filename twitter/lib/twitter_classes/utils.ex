@@ -1,31 +1,18 @@
 defmodule TwitterClasses.Utils do
+  require Logger
   	@doc """
 		Function to get the child Spec for the workers
 	"""
-	def add_children(child_class, num_requests, num_nodes, script_pid) do
-    map = Enum.reduce 1..num_nodes, %{}, fn x, acc ->
-
-      # Generating SHA1 for the index
-      sha_id = :crypto.hash(:sha, to_string(x)) |> Base.encode16
-      # Slicing out the lest significant 8 digits and checking for collisions
-      sha_id = if Map.has_key?(acc, String.slice(sha_id, -8, 8)) do
-          # Moving over the slicing window by 1 so as to avoid collisions
-          String.slice(sha_id, -9, 8)
-        else
-          # No collisions FTW
-          String.slice(sha_id, -8, 8)
-        end
-      {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => sha_id, :start => {child_class, :start_link, []}, :restart => :transient,:type => :worker})
-
-      Map.put(acc, sha_id, child)
+	def add_children(child_class, num_nodes, script_pid) do
+    {:ok, agg} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => :tracker, :start => {TwitterClasses.Tracker, :start_link, [num_nodes, script_pid]}, :restart => :transient,:type => :worker})
+    Logger.debug("Added Tracker on #{inspect agg}")
+    Enum.each 1..num_nodes, fn x ->
+      {:ok, _child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => x, :start => {child_class, :start_link, [x]}, :restart => :transient,:type => :worker})
     end
-
-    # total_messages = num_requests* num_nodes
-    # {:ok, _agg} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => :aggregator, :start => {Tapestryclasses.Aggregator, :start_link, [total_messages, script_pid, num_nodes]}, :restart => :transient,:type => :worker})
-    map
-
+    Logger.debug("Added children and tracker")
   end
 
+  @spec get_guid(any) :: any
   def get_guid(pid) do
     [head| _tail] = :ets.lookup(:pid_id_mapping, "pid_to_id")
     pid_to_id = elem(head, 1)
