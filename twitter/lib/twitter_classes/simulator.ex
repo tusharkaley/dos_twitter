@@ -15,8 +15,14 @@ defmodule TwitterClasses.Simulator do
     end
 
     def handle_info(:bump) do
-      # This function will periodically 
+      # This function will periodically
       schedule()
     end
+
+    # Generate tweet
+    # Tweet with mention
+    # Tweet with hashtag
+    # Tweet with hashtag and mention
+    # Tweet with text
 
   end

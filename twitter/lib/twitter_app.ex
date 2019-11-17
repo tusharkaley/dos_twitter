@@ -1,7 +1,7 @@
 defmodule TwitterApp do
 	use Application
 @moduledoc """
-	Tapestry app which triggers the Supervisor on start
+	Twitter app which triggers the Supervisor on start
 """
   	@doc """
     	Function to start the Application
