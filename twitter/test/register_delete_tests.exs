@@ -1,17 +1,14 @@
-defmodule TwitterTest do
+defmodule RegisterDeleteTests do
   use ExUnit.Case
   doctest TwitterClasses.Utils
 
   test "Test adding core users " do
-    IO.puts("TUSHAR TEST")
-    IO.puts Supervisor.which_children(TwitterClasses.Supervisor)
     TwitterClasses.Utils.add_core_users(TwitterClasses.Core, 5, self())
     assert Supervisor.count_children(TwitterClasses.Supervisor).active == 6
     Supervisor.stop(TwitterClasses.Supervisor)
   end
 
   test "Test Deleting a user" do
-    Process.sleep(500)
     TwitterClasses.Supervisor.start_link()
     TwitterClasses.Utils.add_core_users(TwitterClasses.Core, 5, self())
     user_list = :ets.tab2list(:users)

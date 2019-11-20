@@ -12,7 +12,9 @@ try do
   num_msgs = elem(Integer.parse(num_msgs), 0)
   start_time = Time.utc_now()
   # Adding the core users to the supervisor
-  TwitterClasses.Utils.add_core_users(TwitterClasses.Core, num_user, self())
+  userid_to_handle = TwitterClasses.Utils.add_core_users(TwitterClasses.Core, num_user, self())
+  handles = Map.values(userid_to_handle)
+  :ets.init_table(arg1, arg2)
   IO.puts("The number of children is #{inspect Supervisor.count_children(TwitterClasses.Supervisor)}")
 
   # Register core users
