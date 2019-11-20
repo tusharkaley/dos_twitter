@@ -14,7 +14,8 @@ try do
   # Adding the core users to the supervisor
   userid_to_handle = TwitterClasses.Utils.add_core_users(TwitterClasses.Core, num_user, self())
   handles = Map.values(userid_to_handle)
-  :ets.init_table(arg1, arg2)
+  :ets.new(:aux_info, [:named_table, read_concurrency: true])
+  :ets.insert(:uaux_infosers, {:user_handles, handles})
   IO.puts("The number of children is #{inspect Supervisor.count_children(TwitterClasses.Supervisor)}")
 
   # Register core users

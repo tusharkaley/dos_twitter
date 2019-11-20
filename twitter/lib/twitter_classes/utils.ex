@@ -4,7 +4,7 @@ defmodule TwitterClasses.Utils do
 		Function to get the child Spec for the workers
   """
   @hashtags ['#basketballneverstops', '#lakers', '#tennisdrills', '#sports', '#cricketlife', '#cricketindia', '#dunk', '#indvsa', '#sport', '#nike', '#basket', '#cricketmatch', '#lovetennis', '#babolat', '#football', '#bleedblue', '#msd', '#baseball', '#bball', '#kohli', '#cricketforlife', '#follow', '#instagram', '#follow', '#crickets', '#tenniscoaching', '#ball', '#lavercup', '#basketball', '#jordan', '#hitman', '#k', '#tennispractice', '#rafaelnadal', '#tennislessons', '#tennislover', '#love', '#wilson', '#nadal', '#viratians', '#federer', '#tenniskids', '#cricketnews', '#cricketfever', '#nbabasketball', '#like', '#lebronjames', '#odi', '#stevesmith', '#hoops', '#tennisvideo', '#cali', '#virat', '#ballislife', '#hardikpandya', '#cricketworld', '#rcb', '#england', '#itf', '#fitness', '#cpl', '#englandcricket', '#ashes', '#australianopen', '#tennisball', '#atpworldtour', '#psl', '#indvssa', '#atptour', '#like', '#djokovic', '#southafrica', '#adidas', '#nba', '#soccer', '#basketballislife', '#memes', '#bhfyp', '#golf', '#tennisrunsinourblood', '#soccer', '#baloncesto', '#x', '#klrahul', '#nfl', '#rolandgarros', '#bangladesh', '#basketballtraining', '#tennisaddict', '#lebron']
-  @words ['comb','snow','condition','example','check','reply','choke','signal','stone','ladybug','trick','smash','advice','birthday','comparison','imaginary','loose','glove','needle','recondite','waste','ugliest','ask','sound','twist','whole','well-groomed','exuberant','relieved','resolute','placid','unable','ruthless','fair','five','roasted','safe','even','slow','parallel','nebulous','political','obsolete','various','mammoth','eggnog','sound','twist','stove','hill','school','seed','horn','knowledge','pets','shop','picture','expansion','minute','parcel','end','doll','tongue','detail','ticket','pass','chew','strap','appear','scrub','applaud','carry','wriggle','stamp','bow','dance','coil','fill','soak','trip','grip','accept','snow','request','scrape','considering','about','since','on','underneath','with','under','anti','besides','excluding','following','regarding','amid','before','towards','taillike','fishbowl','comedown','cannot','slumlord','noisemaker','blackjack','forestall','railroad','schoolbus','paycheck','watershed','daybook','sheepskin','candlelight','onetime','waybill','eyeballs','taillight','snowbird','equally','joyously','zealously','very','merrily','nearly','else','easily','frightfully','justly','reluctantly','enormously','triumphantly','safely','upward','constantly','zestily','painfully','nervously','blissfully']
+  @words ['nervously', 'cannot', 'knowledge', 'comedown', 'towards', 'stamp', 'horn', 'parcel', 'anti', 'shop', 'joyously', 'ticket', 'recondite', 'frightfully', 'picture', 'forestall', 'nebulous', 'scrub', 'under', 'very', 'applaud', 'needle', 'eggnog', 'else', 'constantly', 'fair', 'relieved', 'five', 'on', 'waste', 'minute', 'political', 'slow', 'candlelight', 'signal', 'choke', 'exuberant', 'obsolete', 'blissfully', 'reply', 'advice', 'about', 'detail', 'even', 'hill', 'doll', 'with', 'since', 'placid', 'triumphantly', 'daybook', 'coil', 'roasted', 'noisemaker', 'paycheck', 'zestily', 'birthday', 'nearly', 'onetime', 'wriggle', 'snow', 'safely', 'zealously', 'pets', 'grip', 'appear', 'strap', 'comparison', 'ask', 'eyeballs', 'glove', 'schoolbus', 'twist', 'whole', 'snow', 'comb', 'merrily', 'snowbird', 'besides', 'check', 'taillight', 'smash', 'excluding', 'sheepskin', 'twist', 'parallel', 'expansion', 'dance', 'mammoth', 'railroad', 'fishbowl', 'sound', 'waybill', 'school', 'considering', 'imaginary', 'painfully', 'underneath', 'blackjack', 'ladybug', 'request', 'upward', 'well-groomed', 'end', 'example', 'following', 'stove', 'amid', 'bow', 'enormously', 'safe', 'carry', 'accept', 'tongue', 'fill', 'ruthless', 'loose', 'ugliest', 'trick', 'watershed', 'reluctantly', 'justly', 'equally', 'various', 'unable', 'sound', 'slumlord', 'condition', 'seed', 'trip', 'pass', 'scrape', 'soak', 'before', 'resolute', 'easily', 'stone', 'taillike', 'chew', 'regarding']
 
   def add_core_users(child_class, num_nodes, script_pid) do
     :ets.new(:users, [:named_table, read_concurrency: true])
@@ -33,7 +33,7 @@ defmodule TwitterClasses.Utils do
   def add_user(handle, id, pid) do
     # Storing users in a table in
     :ets.insert(:users, {handle, true, id, pid})
-    
+
   end
 
   def delete_user(handle) do
@@ -41,8 +41,27 @@ defmodule TwitterClasses.Utils do
     :ets.insert(:users, {handle, false})
   end
 
-  def generate_tweet() do
 
+
+  def generate_tweet() do
+    rand_num = Enum.random(1..7)
+    handles = :ets.lookup(:aux_info, :user_handles)
+    tweet = Enum.take_random(@words, rand_num)
+    tweet = if toss_coin() == 1 do
+      tweet ++ Enum.take_random(handles, 1)
+    end
+    rand_num = Enum.random(1..10)
+    tweet = tweet ++ Enum.take_random(@words, rand_num)
+
+    tweet = if toss_coin() == 1 do
+      rand_num = Enum.random(1..4)
+      tweet ++ Enum.take_random(@hashtags, rand_num)
+    end
+    Enum.join(tweet, " ")
+  end
+
+  def toss_coin() do
+    Enum.random([0,1])
   end
 
 end
