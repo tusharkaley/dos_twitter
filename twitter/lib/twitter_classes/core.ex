@@ -8,4 +8,16 @@ defmodule TwitterClasses.Core do
     node_state = %{"id" => id, "handle" => nil}
     {:ok, node_state}
   end
+
+
+  def tweet (tweet, pid) do
+    GenServer.cast(pid, {:tweet, message })
+  end
+
+  def handle_cast({:tweet, message}, node_state) do
+
+
+  end
+
+
 end

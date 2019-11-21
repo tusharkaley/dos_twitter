@@ -34,5 +34,16 @@ defmodule TwitterClasses.Utils do
     :ets.new(:pid_id_mapping, [:named_table, read_concurrency: true])
     :ets.insert(:pid_id_mapping, {"pid_to_id", pid_to_id})
 
+    tweets_store = %{"username" => "tweet"}
+    
+    :ets.new(:tweets_store, [:named_table, read_concurrency: true])
+    :ets.insert(:tweets_store, {"tweets_store", pid_to_id})
+
+  end
+
+  def set_subscribers(username) do
+    subscribers = %{"username" => "subscribersList"}
+    :ets.new(:subscribers_list,[:named_table,read_concurrency: true])
+    :ets.insert(:subscribers_list, subscribers)
   end
 end
