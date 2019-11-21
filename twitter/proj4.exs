@@ -12,12 +12,21 @@ try do
   num_msgs = elem(Integer.parse(num_msgs), 0)
   start_time = Time.utc_now()
   # Adding the core users to the supervisor
-  TwitterClasses.Utils.add_children(TwitterClasses.Core, num_user, self())
+  userid_to_handle = TwitterClasses.Utils.add_core_users(TwitterClasses.Core, num_user, self())
+  handles = Map.values(userid_to_handle)
+  :ets.init_table(arg1, arg2)
   IO.puts("The number of children is #{inspect Supervisor.count_children(TwitterClasses.Supervisor)}")
+
+  # Register core users
+
+  # Adding Simulator
+
+  #
+
   # receive do
   #   {:terminate_now, _pid} -> IO.puts("Terminating Supervisor")
   # end
-  Supervisor.stop(Tapestryclasses.Supervisor)
+  Supervisor.stop(TwitterClasses.Supervisor)
   final_time = Time.utc_now()
   time_diff = Time.diff(final_time, start_time, :millisecond)
   IO.puts("Total time taken #{time_diff} milliseconds")

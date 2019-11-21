@@ -1,11 +1,12 @@
 defmodule TwitterClasses.Core do
-  def start_link(id) do
-    GenServer.start_link(__MODULE__, [id])
+  def start_link(id, handle) do
+    GenServer.start_link(__MODULE__, [id, handle])
   end
 
   def init(init_args) do
     {:ok, id} = Enum.fetch(init_args, 0)
-    node_state = %{"id" => id, "handle" => nil}
+    {:ok, handle} = Enum.fetch(init_args, 1)
+    node_state = %{"id" => id, "handle" => handle}
     {:ok, node_state}
   end
 
