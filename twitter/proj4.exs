@@ -14,10 +14,30 @@ try do
   # Adding the core users to the supervisor
   userid_to_handle = TwitterClasses.Utils.add_core_users(TwitterClasses.Core, num_user, self())
   handles = Map.values(userid_to_handle)
-  :ets.new(:aux_info, [:named_table, read_concurrency: true])
-  :ets.insert(:uaux_infosers, {:user_handles, handles})
-  IO.puts("The number of children is #{inspect Supervisor.count_children(TwitterClasses.Supervisor)}")
 
+  # create the aux_info table
+  TwitterClasses.DBUtils.create_table(:aux_info)
+
+  # add handles to the aux_info table
+  TwitterClasses.DBUtils.add_to_table(:aux_info, {:user_handles, handles})
+
+  # Creating tweet tables
+  TwitterClasses.DBUtils.create_table(:tweets)
+  TwitterClasses.DBUtils.create_table(:hashtags)
+  TwitterClasses.DBUtils.create_table(:mentions)
+  TwitterClasses.DBUtils.create_table(:user_tweets)
+
+  # IO.puts("The number of children is #{inspect Supervisor.count_children(TwitterClasses.Supervisor)}")
+  IO.puts "TWEET"
+  Enum.each(1..5, fn x ->
+    TwitterClasses.Utils.generate_tweet()
+  end)
+  IO.puts("HASHTAGS")
+  IO.inspect(:ets.tab2list(:hashtags))
+  IO.puts("MENTIONS")
+  IO.inspect(:ets.tab2list(:mentions))
+  IO.puts("TWEETS")
+  IO.inspect(:ets.tab2list(:tweets))
   # Register core users
 
   # Adding Simulator
@@ -33,6 +53,6 @@ try do
   IO.puts("Total time taken #{time_diff} milliseconds")
 
 rescue
-	_e in ArgumentError ->  IO.puts("Script Failed!")
+	e in ArgumentError ->  IO.puts(e)
 	System.stop(1)
 end
