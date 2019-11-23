@@ -33,7 +33,6 @@ defmodule TwitterClasses.Utils do
   def add_user(handle, id, pid) do
     # Storing users in a table in
     :ets.insert(:users, {handle, true, id, pid})
-    
   end
 
   def delete_user(handle) do
@@ -42,16 +41,12 @@ defmodule TwitterClasses.Utils do
   end
 
   def generate_tweet() do
-
     tweets_store = %{"username" => "tweet"}
-    
     :ets.new(:tweets_store, [:named_table, read_concurrency: true])
     :ets.insert(:tweets_store, {"tweets_store", pid_to_id})
-
   end
 
   def set_subscribers(username) do
-    subscribers = %{"username" => "subscribersList"}
     :ets.new(:subscribers_list,[:named_table,read_concurrency: true])
     :ets.insert(:subscribers_list, subscribers)
   end
