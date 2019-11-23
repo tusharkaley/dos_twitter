@@ -9,7 +9,7 @@ defmodule TwitterClasses.DBUtils do
         {:ok, res} = Enum.fetch(res, 0)
         res
     else
-        res
+        {}
     end
     res
   end
@@ -23,12 +23,11 @@ defmodule TwitterClasses.DBUtils do
   end
 
   def add_or_update(table, key, entry) do
-    IO.puts(is_atom(table))
     tweets = TwitterClasses.DBUtils.get_from_table(table, key)
-    if length(tweets) > 0 do
-      stored_mentions = TwitterClasses.DBUtils.get_from_table(table, key)
-      stored_mentions = stored_mentions ++[entry]
-      TwitterClasses.DBUtils.add_to_table(table, {key, stored_mentions})
+    if tuple_size(tweets) > 0 do
+      tweets = elem(tweets, 1)
+      tweets = tweets ++[entry]
+      TwitterClasses.DBUtils.add_to_table(table, {key, tweets})
     else
       TwitterClasses.DBUtils.add_to_table(table, {key, [entry]})
     end

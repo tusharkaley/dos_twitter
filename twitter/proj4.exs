@@ -1,11 +1,11 @@
 
 dynamic_num_nodes = 10
-try do
+# try do
   # Check if we have correct arguments
 
-	if length(System.argv) != 2 do
-		raise ArgumentError
-	end
+	# if length(System.argv) != 2 do
+	# 	raise ArgumentError
+	# end
 	# Pick up the arguments
 	[num_user, num_msgs] = System.argv
   num_user = elem(Integer.parse(num_user), 0)
@@ -13,7 +13,7 @@ try do
   start_time = Time.utc_now()
   # Adding the core users to the supervisor
   pid_to_handle = TwitterClasses.Utils.add_core_users(TwitterClasses.Core, num_user, self(), num_msgs)
-  handles = Map.values(userid_to_handle)
+  handles = Map.values(pid_to_handle)
 
   # create the aux_info table
   TwitterClasses.DBUtils.create_table(:aux_info)
@@ -30,7 +30,10 @@ try do
   # IO.puts("The number of children is #{inspect Supervisor.count_children(TwitterClasses.Supervisor)}")
   IO.puts "TWEET"
   Enum.each(1..5, fn x ->
-    TwitterClasses.Utils.generate_tweet()
+    {:ok, temp} = Enum.fetch(Enum.take_random(handles,1),0)
+    IO.puts "getting random handle"
+    IO.inspect(temp)
+    TwitterClasses.Utils.generate_tweet(temp)
   end)
   IO.puts("HASHTAGS")
   IO.inspect(:ets.tab2list(:hashtags))
@@ -38,6 +41,8 @@ try do
   IO.inspect(:ets.tab2list(:mentions))
   IO.puts("TWEETS")
   IO.inspect(:ets.tab2list(:tweets))
+  IO.puts("USER TWEETS")
+  IO.inspect(:ets.tab2list(:user_tweets))
   # Register core users
 
   # Adding Simulator
@@ -52,7 +57,7 @@ try do
   time_diff = Time.diff(final_time, start_time, :millisecond)
   IO.puts("Total time taken #{time_diff} milliseconds")
 
-rescue
-	e in ArgumentError ->  IO.puts(e)
-	System.stop(1)
-end
+# rescue
+# 	e in ArgumentError ->  IO.puts(e)
+# 	System.stop(1)
+# end
