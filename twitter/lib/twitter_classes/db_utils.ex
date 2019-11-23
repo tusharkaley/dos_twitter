@@ -7,13 +7,11 @@ defmodule TwitterClasses.DBUtils do
     res = :ets.lookup(table_name, key)
     res = if length(res)>0 do
         {:ok, res} = Enum.fetch(res, 0)
-        res = elem(res, 1)
         res
     else
         res
     end
     res
-
   end
 
   def add_to_table(table_name, data) do

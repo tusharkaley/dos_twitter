@@ -12,7 +12,7 @@ try do
   num_msgs = elem(Integer.parse(num_msgs), 0)
   start_time = Time.utc_now()
   # Adding the core users to the supervisor
-  userid_to_handle = TwitterClasses.Utils.add_core_users(TwitterClasses.Core, num_user, self())
+  pid_to_handle = TwitterClasses.Utils.add_core_users(TwitterClasses.Core, num_user, self(), num_msgs)
   handles = Map.values(userid_to_handle)
 
   # create the aux_info table
