@@ -13,13 +13,20 @@ dynamic_num_nodes = 10
   start_time = Time.utc_now()
   # Adding the core users to the supervisor
   pid_to_handle = TwitterClasses.Utils.add_core_users(TwitterClasses.Core, num_user, self(), num_msgs)
+
+  handle_to_pid = Enum.reduce(pid_to_handle, %{}, fn {k, vs}, acc ->
+    Map.put(acc,vs,k)
+  end)
   handles = Map.values(pid_to_handle)
+
 
   # create the aux_info table
   TwitterClasses.DBUtils.create_table(:aux_info)
 
   # add handles to the aux_info table
   TwitterClasses.DBUtils.add_to_table(:aux_info, {:user_handles, handles})
+  TwitterClasses.DBUtils.add_to_table(:aux_info, {:pid_to_handle, pid_to_handle})
+  TwitterClasses.DBUtils.add_to_table(:aux_info, {:handle_to_pid, handle_to_pid})
 
   # Creating tweet tables
   TwitterClasses.DBUtils.create_table(:tweets)
@@ -28,21 +35,15 @@ dynamic_num_nodes = 10
   TwitterClasses.DBUtils.create_table(:user_tweets)
 
   # IO.puts("The number of children is #{inspect Supervisor.count_children(TwitterClasses.Supervisor)}")
-  IO.puts "TWEET"
+
   Enum.each(1..5, fn x ->
     {:ok, temp} = Enum.fetch(Enum.take_random(handles,1),0)
-    IO.puts "getting random handle"
-    IO.inspect(temp)
+
     TwitterClasses.Utils.generate_tweet(temp)
   end)
-  IO.puts("HASHTAGS")
-  IO.inspect(:ets.tab2list(:hashtags))
-  IO.puts("MENTIONS")
-  IO.inspect(:ets.tab2list(:mentions))
-  IO.puts("TWEETS")
-  IO.inspect(:ets.tab2list(:tweets))
-  IO.puts("USER TWEETS")
-  IO.inspect(:ets.tab2list(:user_tweets))
+
+  {tweet_hash, tweet_text} = TwitterClasses.Utils.get_random_tweet()
+ 
   # Register core users
 
   # Adding Simulator
