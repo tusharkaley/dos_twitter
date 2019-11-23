@@ -53,8 +53,7 @@ defmodule TwitterClasses.Utils do
       handles = TwitterClasses.DBUtils.get_from_table(:aux_info, :user_handles)
       handles = elem(handles, 1)
       handles = List.delete(handles, user_handle)
-      IO.puts "Love handles"
-      IO.inspect(handles)
+
       tweet = Enum.take_random(@words, rand_num)
       mentions = if toss_coin() == 1 do
         Enum.take_random(handles, 1)
@@ -84,17 +83,16 @@ defmodule TwitterClasses.Utils do
       else
         tweet
       end
-      IO.inspect(hashtags)
-      IO.inspect(mentions)
+
       tweet = Enum.join(tweet, " ")
-      IO.puts(tweet)
+
       tweet_hash = get_tweet_hash(tweet)
       TwitterClasses.DBUtils.add_to_table(:tweets, {tweet_hash, tweet})
       TwitterClasses.Utils.save_mentions_hashtags_to_table(:hashtags, tweet_hash, hashtags)
       TwitterClasses.Utils.save_mentions_hashtags_to_table(:mentions, tweet_hash, mentions)
       TwitterClasses.DBUtils.add_or_update(:user_tweets, user_handle, tweet_hash)
 
-      {tweet, hashtags, mentions}
+      {tweet, hashtags, mentions, tweet_hash}
   end
 
   def toss_coin() do
@@ -114,5 +112,11 @@ defmodule TwitterClasses.Utils do
     end
   end
 
+  def get_random_tweet() do
+    all_tweets = :ets.tab2list(:tweets)
+    {:ok, random_tweet} = Enum.fetch(Enum.take_random(all_tweets, 1), 0)
+    random_tweet
+
+  end
 
 end
