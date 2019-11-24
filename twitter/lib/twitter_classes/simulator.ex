@@ -16,12 +16,6 @@ defmodule TwitterClasses.Simulator do
       {low,high}= Enum.split alive_users, size
       high_freq_tweet(high)
       low_freq_tweet(low)
-
-      #divide users- 80:20
-      # 20 - low freq
-      # 80 - high freq
-
-
     end
 
     def high_freq_tweet() do
@@ -29,17 +23,14 @@ defmodule TwitterClasses.Simulator do
     end
 
     def low_freq_tweet() do
-      Process.send_after(self(), {:low_freq_tweet, slow_users}, 600)
+      Process.send_after(self(), {:low_freq_tweet, slow_users}, 1000)
 
     end
 
     def handle_info({:high_freq_tweet,power_users}) do
       user = Enum.random power_users
+      TwitterClasses.Core.tweet_retweet(user)
       #user TWEETS
-      #notify simulator
-      power_users = List.delete power_users, user
-
-      # This function will periodically
       high_freq_tweet()
 
     end
@@ -47,8 +38,7 @@ defmodule TwitterClasses.Simulator do
     def handle_info({:low_freq_tweet,slow_users}) do
       user = Enum.random slow_users
       #user TWEETS
-      #notify simulator
-      slow_users = List.delete slow_users, user
+      TwitterClasses.Core.tweet_retweet(user)
       low_freq_tweet()
     end
 
