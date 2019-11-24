@@ -10,9 +10,12 @@ defmodule TwitterClasses.Tracker do
     and check if it is the max
   """
   def collect_hops(source) do
-    GenServer.cast(:aggregator, {:tweets_done, source})
+    GenServer.cast(:tracker, {:tweets_done, source})
   end
 
+  def get_notifications(sender) do
+    GenServer.cast(:tracker, {:get_notofications, sender})
+  end
 @doc """
   Init function to set the state of the genserver
 """
@@ -22,6 +25,7 @@ defmodule TwitterClasses.Tracker do
     node_state = %{"num_nodes_done" => 0, "total_nodes" => total_nodes, "terminate_addr"=> script_pid}
     {:ok, node_state}
   end
+
 @doc """
   Server side function to log hops
 """
@@ -36,5 +40,9 @@ defmodule TwitterClasses.Tracker do
     # IO.inspect(node_state)
     {:noreply, node_state}
   end
+  def handle_cast({:get_notifications, sender}, node_state) do
+    user_handle = TwitterClasses.DBUtils.get_from_table(:users, sender)
+  end
+
 
 end
