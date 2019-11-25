@@ -12,19 +12,6 @@ defmodule TwitterClasses.Core do
     {:ok, node_state}
   end
 
-<<<<<<< HEAD
-
-  def tweet (tweet, pid) do
-    GenServer.cast(pid, {:tweet, message })
-  end
-
-  def handle_cast({:tweet, message}, node_state) do
-
-
-  end
-
-
-=======
   def tweet_retweet(pid) do
     GenServer.cast(pid,{:tweet_retweet})
   end
@@ -72,9 +59,6 @@ Server side function to receive notifs
         tweet_data_map = Map.put(tweet_data_map, "new_tweet", false)
         IO.inspect(tweet_data_map)
         # TODO: Send tweet_data_map to the tracker from here
-
-
       end
   end
->>>>>>> af39dba98beb05c8ab5f46cba8981e807f319155
 end

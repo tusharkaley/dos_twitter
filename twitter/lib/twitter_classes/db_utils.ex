@@ -8,7 +8,7 @@ defmodule TwitterClasses.DBUtils do
     res = if length(res)>0 do
         {:ok, res} = Enum.fetch(res, 0)
         res
-    else
+    else      
         {}
     end
     res

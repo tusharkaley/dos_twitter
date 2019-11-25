@@ -11,7 +11,7 @@ defmodule TwitterClasses.Simulator do
     end
 
     def trigger_tweet do
-      alive_users =  :ets.match(:users, {:"_",true,:"_",:"$1"})
+      alive_users =  :ets.match(:users, {:"$1",true,true,:"_",:"_"})
       size = trunc(length(alive_users) * 0.8)
       {low,high}= Enum.split alive_users, size
       high_freq_tweet(high)

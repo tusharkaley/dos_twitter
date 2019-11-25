@@ -32,13 +32,13 @@ defmodule TwitterClasses.Utils do
     temp = :crypto.strong_rand_bytes(len) |> Base.url_encode64 |> binary_part(0, len)
     "@"<>temp
   end
+
   def add_user(handle, id, pid) do
     # Storing users in a table in
     TwitterClasses.DBUtils.add_to_table(:users, {pid, true, true, id, handle})
   end
 
   def delete_user(pid) do
-
     value = TwitterClasses.DBUtils.get_from_table(:users, pid)
     value = put_elem(value, 1, false)
     TwitterClasses.DBUtils.delete_from_table(:users, pid)
@@ -106,7 +106,6 @@ defmodule TwitterClasses.Utils do
       Enum.each(entity, fn x ->
         TwitterClasses.DBUtils.add_or_update(table, x, tweet_hash)
       end)
-
     end
   end
 
@@ -114,10 +113,17 @@ defmodule TwitterClasses.Utils do
     all_tweets = :ets.tab2list(:tweets)
     {:ok, random_tweet} = Enum.fetch(Enum.take_random(all_tweets, 1), 0)
     random_tweet
+  end
 
-  def set_subscribers(username) do
-    :ets.new(:subscribers_list,[:named_table,read_concurrency: true])
-    :ets.insert(:subscribers_list, subscribers)
+  def set_followers(user_pid,num_nodes) do
+    max_followers = trunc(0.8*num_nodes)
+    num_followers = 1..max_followers
+    all_user_pids = TwitterClasses.DBUtils.get_from_table(:users, pid)
+    all_user_pids = List.delete all_user_pids, user_pid
+    followers = Enum.take_random all_user_pids, Enum.random(num_followers)
+    user_followers = Map.put user_followers, user_pid, followers
+    #add to table
+    TwitterClasses.DBUtils.add_to_table(:user_followers, {"user_followers",user_followers})
   end
 
 end

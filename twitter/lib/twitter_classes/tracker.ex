@@ -14,8 +14,13 @@ defmodule TwitterClasses.Tracker do
   end
 
   def get_notifications(sender) do
-    GenServer.cast(:tracker, {:get_notofications, sender})
+    GenServer.cast(:tracker, {:get_notifications, sender})
   end
+
+  def notify_followers(user_pid,tweet) do
+    GenServer.cast(:tracker, {:notify_followers, user_pid,tweet})
+  end
+
 @doc """
   Init function to set the state of the genserver
 """
@@ -44,5 +49,25 @@ defmodule TwitterClasses.Tracker do
     user_handle = TwitterClasses.DBUtils.get_from_table(:users, sender)
   end
 
+	@doc """
+	Server side function to disctribute tweets to followers
+	"""
+	def handle_cast({:notify_followers,source,tweet},node_state) do
+		followers_map = TwitterClasses.DBUtils.get_from_table(:user_followers, "user_followers")
+    followers = Map.get followers_map, source
+    tweet_hash = TwitterClasses.Utils.get_tweet_hash(tweet)
+    Enum.each followers, fn(user) ->
+      values = TwitterClasses.DBUtils.get_from_table(:users, user)
+      if(elem(values, 1) == false and elem(values, 2) == false) do
+        TwitterClasses.Core.receive_notifications(user, tweet)
+      else
+        values = TwitterClasses.DBUtils.get_from_table(:user_notifications, user)
+        notifications = elem(values,2)
+        notifications = notifications ++ [tweet_hash]
+        TwitterClasses.DBUtils.add_or_update(:user_notifications, user, source, notifications)
+      end
+			
+		end
+	end
 
 end
