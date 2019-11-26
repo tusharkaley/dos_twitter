@@ -118,7 +118,7 @@ defmodule TwitterClasses.Utils do
   def set_followers(user_pid,num_nodes) do
     max_followers = trunc(0.8*num_nodes)
     num_followers = 1..max_followers
-    all_user_pids = TwitterClasses.DBUtils.get_from_table(:users, pid)
+    all_user_pids = TwitterClasses.DBUtils.get_from_table(:users, user_pid)
     all_user_pids = List.delete all_user_pids, user_pid
     followers = Enum.take_random all_user_pids, Enum.random(num_followers)
     user_followers = Map.put user_followers, user_pid, followers
