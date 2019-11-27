@@ -24,14 +24,26 @@ defmodule TwitterClasses.Core do
     GenServer.cast(pid, {:get_my_notifications})
   end
 
+  def get_all_tweets(pid) do
+    GenServer.cast(pid, {:get_all_tweets})
+  end
+
   def receive_notifications(pid, notif_data) do
     GenServer.cast(pid, {:receive_notifications, notif_data})
   end
+
+  def follow_user(pid, follow_handle) do
+    GenServer.cast(pid, {:follow_user, follow_handle})
+  end
+
 @doc """
 Server side function to get_my_notifs
 """
   def handle_cast({:get_my_notifications}, node_state) do
-    IO.inspect(node_state)
+    values = TwitterClasses.DBUtils.get_from_table(:user_notifications, self())
+    # TwitterClasses.DBUtils.add_to_table(:user_notifications,self(), [])
+    IO.inspect values
+    {:noreply, node_state}
   end
 @doc """
 Server side function to receive notifs
@@ -39,16 +51,26 @@ Server side function to receive notifs
   def handle_cast({:receive_notifications, notif_data}, node_state) do
     IO.inspect(notif_data)
     IO.inspect(node_state)
+    {:noreply, node_state}
   end
+
+@doc """
+Server side function to receive all tweets
+"""
+def handle_cast({:get_all_tweets}, node_state) do
+  values = TwitterClasses.DBUtils.get_from_table(:user_wall, self())
+  IO.inspect values
+  {:noreply, node_state}
+end  
 
 @doc """
 Server side function to send tweets
 """
   def handle_cast({:tweet}, node_state) do
     my_handle = node_state["handle"]
-    IO.inspect my_handle
       # if TwitterClasses.Utils.toss_coin() == 1 do
         tweet_data = TwitterClasses.Utils.generate_tweet(my_handle)
+
         tweet_data_map = %{}
         tweet_txt = elem(tweet_data, 0)
         tweet_data_map = Map.put(tweet_data_map, "tweet_txt",tweet_txt)
@@ -56,20 +78,9 @@ Server side function to send tweets
         tweet_data_map = Map.put(tweet_data_map, "mentions", elem(tweet_data, 2))
         tweet_data_map = Map.put(tweet_data_map, "tweet_hash", elem(tweet_data, 3))
         tweet_data_map = Map.put(tweet_data_map, "new_tweet", true)
-        IO.inspect(tweet_data_map)
-        TwitterClasses.Utils.notify_followers(self(), tweet_txt)
-      # else
-      #   # coin toss -> heads(0) RETWEET
-      #   # Pick out a tweet you want the user tp retweet
-      #   tweet_data_map = %{}
-      #   {tweet_hash, tweet_text} = TwitterClasses.Utils.get_random_tweet()
-      #   tweet_data_map = Map.put(tweet_data_map, "tweet_txt", tweet_text)
-      #   tweet_data_map = Map.put(tweet_data_map, "tweet_hash", tweet_hash)
-      #   tweet_data_map = Map.put(tweet_data_map, "new_tweet", false)
-      #   IO.inspect(tweet_data_map)
-      #   TwitterClasses.DBUtils.add_or_update(:user_tweets, user_handle, {tweet_hash,"retweet"})
-      #   TwitterClasses.Utils.notify_followers(self(), tweet_text)
-      # end
+        TwitterClasses.Tracker.notify_followers(self(), tweet_txt)
+        {:noreply, node_state}
+        
   end
 
 @doc """
@@ -82,9 +93,17 @@ Server side function to send retweets
     tweet_data_map = Map.put(tweet_data_map, "tweet_txt", tweet_text)
     tweet_data_map = Map.put(tweet_data_map, "tweet_hash", tweet_hash)
     tweet_data_map = Map.put(tweet_data_map, "new_tweet", false)
-    IO.inspect(tweet_data_map)
     TwitterClasses.DBUtils.add_or_update(:user_tweets, user_handle, {tweet_hash,"retweet"})
-    TwitterClasses.Utils.notify_followers(self(), tweet_text)
+    TwitterClasses.Tracker.notify_followers(self(), tweet_text)
+    {:noreply, node_state}
+  end
+
+  def handle_cast({:follow_user,follow_handle},node_state) do
+    handle_to_pid = TwitterClasses.DBUtils.get_from_table(:aux_info, :handle_to_pid)
+    handle_to_pid = elem(handle_to_pid,1)
+    follow_pid  = Map.get handle_to_pid, follow_handle
+    TwitterClasses.Utils.follow_user(self(), follow_pid)
+    {:noreply, node_state}
   end
 
 end

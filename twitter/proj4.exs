@@ -35,6 +35,7 @@ dynamic_num_nodes = 10
   TwitterClasses.DBUtils.create_table(:user_tweets)
   TwitterClasses.DBUtils.create_table(:user_followers)
   TwitterClasses.DBUtils.create_table(:user_notifications)
+  TwitterClasses.DBUtils.create_table(:user_wall)
   # IO.puts("The number of children is #{inspect Supervisor.count_children(TwitterClasses.Supervisor)}")
 
   Enum.each(1..5, fn x ->

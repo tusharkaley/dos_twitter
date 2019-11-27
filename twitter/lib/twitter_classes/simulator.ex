@@ -30,7 +30,7 @@ defmodule TwitterClasses.Simulator do
     def handle_info({:high_freq_tweet,power_users}) do
       user = Enum.random power_users
       #user TWEETS
-      TwitterClasses.Core.tweet_retweet(user)
+      TwitterClasses.Core.tweet(user)
       high_freq_tweet(power_users)
 
     end
@@ -38,7 +38,7 @@ defmodule TwitterClasses.Simulator do
     def handle_info({:low_freq_tweet,slow_users}) do
       user = Enum.random slow_users
       #user TWEETS
-      TwitterClasses.Core.tweet_retweet(user)
+      TwitterClasses.Core.tweet(user)
       low_freq_tweet(slow_users)
     end
 

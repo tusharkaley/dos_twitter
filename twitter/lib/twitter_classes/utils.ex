@@ -85,11 +85,12 @@ defmodule TwitterClasses.Utils do
       tweet = Enum.join(tweet, " ")
 
       tweet_hash = get_tweet_hash(tweet)
+      IO.inspect tweet_hash
       TwitterClasses.DBUtils.add_to_table(:tweets, {tweet_hash, tweet})
       TwitterClasses.Utils.save_mentions_hashtags_to_table(:hashtags, tweet_hash, hashtags)
       TwitterClasses.Utils.save_mentions_hashtags_to_table(:mentions, tweet_hash, mentions)
       TwitterClasses.DBUtils.add_or_update(:user_tweets, user_handle, {tweet_hash,"tweet"})
-
+      
       {tweet, hashtags, mentions, tweet_hash}
   end
 

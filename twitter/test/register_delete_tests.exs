@@ -24,39 +24,27 @@ defmodule RegisterDeleteTests do
     Supervisor.stop(TwitterClasses.Supervisor)
   end
 
-  test "Query with hashtag" do
-    
-  end
-
   test "Subscribe to user's tweets" do
     #create data for table
-    my_pid = "my_pid"
+    TwitterClasses.DBUtils.create_table(:aux_info)
     TwitterClasses.DBUtils.create_table(:user_followers)
-    user_followers = %{"pid1"=>["pid2","pid3"], "pid2"=>["pid1","pid3"]}
+    user_followers = %{"pid1"=>["pid2","pid3"]}
     TwitterClasses.DBUtils.add_to_table(:user_followers, {"user_followers",user_followers})
-
     subscribe_to_pid = "subscribe_to_pid"
-    TwitterClasses.Utils.follow_user(my_pid, subscribe_to_pid)
+    handle_to_pid = %{"follow_handle" => subscribe_to_pid}
+    TwitterClasses.DBUtils.add_to_table(:aux_info, {:handle_to_pid, handle_to_pid})
+    Process.sleep(3000)
+    TwitterClasses.Supervisor.start_link()
+    {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 5, :start => {TwitterClasses.Core, :start_link, [6, "handler", 10]}, :restart => :transient,:type => :worker})
+    TwitterClasses.Core.follow_user(child, "follow_handle")
+
+    Process.sleep(3000)
 
     user_followers = TwitterClasses.DBUtils.get_from_table(:user_followers,"user_followers")
     user_followers = elem(user_followers,1)
     followers = Map.get user_followers, subscribe_to_pid
-    assert Enum.member? followers,my_pid
+    assert Enum.member? followers,child
+    Supervisor.stop(TwitterClasses.Supervisor)
   end
-
-  # test "User tweets" do
-  #   my_pid = "my_pid"
-  #   TwitterClasses.Supervisor.start_link()
-  #   {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 1, :start => {TwitterClasses.Core, :start_link, [1, "handle", 10]}, :restart => :transient,:type => :worker})
-  #   TwitterClasses.Core.tweet(my_pid)
-  #   tweets = TwitterClasses.DBUtils.get_from_table(:user_tweets, "handle")
-  #   last =  List.last tweets != nil
-  #   assert last
-  # end
-
-  # test "User retweets" do
-  #   TwitterClasses.Core.retweet(my_pid)
-    
-  # end
 
 end

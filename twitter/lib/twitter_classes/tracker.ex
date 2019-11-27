@@ -47,6 +47,7 @@ defmodule TwitterClasses.Tracker do
   end
   def handle_cast({:get_notifications, sender}, node_state) do
     user_handle = TwitterClasses.DBUtils.get_from_table(:users, sender)
+    {:noreply, node_state}
   end
 
 	@doc """
@@ -61,13 +62,15 @@ defmodule TwitterClasses.Tracker do
       if(elem(values, 1) == true and elem(values, 2) == true) do
         TwitterClasses.Core.receive_notifications(user, tweet)
       else
-        values = TwitterClasses.DBUtils.get_from_table(:user_notifications, user)
-        notifications = elem(values,2)
-        notifications = notifications ++ [tweet_hash]
-        TwitterClasses.DBUtils.add_or_update(:user_notifications, user, source, notifications)
+        # values = TwitterClasses.DBUtils.get_from_table(:user_notifications, user)
+        # notifications = elem(values,2)
+        # notifications = notifications ++ [tweet_hash]
+        TwitterClasses.DBUtils.add_or_update(:user_notifications, user, {tweet_hash,source})
       end
+      TwitterClasses.DBUtils.add_or_update(:user_wall, user, {tweet_hash,source})
 			
-		end
+    end
+    {:noreply, node_state}
 	end
 
 end
