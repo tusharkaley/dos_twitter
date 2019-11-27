@@ -88,7 +88,7 @@ defmodule TwitterClasses.Utils do
       TwitterClasses.DBUtils.add_to_table(:tweets, {tweet_hash, tweet})
       TwitterClasses.Utils.save_mentions_hashtags_to_table(:hashtags, tweet_hash, hashtags)
       TwitterClasses.Utils.save_mentions_hashtags_to_table(:mentions, tweet_hash, mentions)
-      TwitterClasses.DBUtils.add_or_update(:user_tweets, user_handle, tweet_hash)
+      TwitterClasses.DBUtils.add_or_update(:user_tweets, user_handle, {tweet_hash,"tweet"})
 
       {tweet, hashtags, mentions, tweet_hash}
   end
@@ -118,12 +118,46 @@ defmodule TwitterClasses.Utils do
   def set_followers(user_pid,num_nodes) do
     max_followers = trunc(0.8*num_nodes)
     num_followers = 1..max_followers
-    all_user_pids = TwitterClasses.DBUtils.get_from_table(:users, user_pid)
+    user_pids = TwitterClasses.DBUtils.get_from_table(:aux_info, :pid_to_handle)
+    user_pids = elem(user_pids, 1)
+    all_user_pids = Map.keys user_pids
     all_user_pids = List.delete all_user_pids, user_pid
     followers = Enum.take_random all_user_pids, Enum.random(num_followers)
+    user_followers = TwitterClasses.DBUtils.get_from_table(:user_followers,"user_followers")
+    user_followers = elem(user_followers,1)
+
     user_followers = Map.put user_followers, user_pid, followers
     #add to table
     TwitterClasses.DBUtils.add_to_table(:user_followers, {"user_followers",user_followers})
+  end
+
+  def follow_user(user_pid, subscribe_to_user) do
+    user_followers = TwitterClasses.DBUtils.get_from_table(:user_followers,"user_followers")
+    user_followers = elem(user_followers,1)
+
+    followers = 
+    if Map.has_key? user_followers, subscribe_to_user do
+      Map.get user_followers, subscribe_to_user
+    else
+      []
+    end
+   
+    followers =
+    if length(followers) >0 do
+      followers ++ [user_pid]
+    else
+      [user_pid]
+    end
+    user_followers = Map.put user_followers, subscribe_to_user, followers
+    TwitterClasses.DBUtils.add_to_table(:user_followers, {"user_followers",user_followers})
+  end
+
+  def query_hashtag(hashtag) do
+    
+  end
+
+  def query_mentions(handle) do
+    
   end
 
 end

@@ -18,7 +18,7 @@ defmodule TwitterClasses.Tracker do
   end
 
   def notify_followers(user_pid,tweet) do
-    GenServer.cast(:tracker, {:notify_followers, user_pid,tweet})
+    GenServer.cast(:tracker, {:notify_followers, user_pid, tweet})
   end
 
 @doc """
@@ -58,7 +58,7 @@ defmodule TwitterClasses.Tracker do
     tweet_hash = TwitterClasses.Utils.get_tweet_hash(tweet)
     Enum.each followers, fn(user) ->
       values = TwitterClasses.DBUtils.get_from_table(:users, user)
-      if(elem(values, 1) == false and elem(values, 2) == false) do
+      if(elem(values, 1) == true and elem(values, 2) == true) do
         TwitterClasses.Core.receive_notifications(user, tweet)
       else
         values = TwitterClasses.DBUtils.get_from_table(:user_notifications, user)

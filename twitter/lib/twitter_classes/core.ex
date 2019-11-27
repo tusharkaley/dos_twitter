@@ -12,8 +12,12 @@ defmodule TwitterClasses.Core do
     {:ok, node_state}
   end
 
-  def tweet_retweet(pid) do
-    GenServer.cast(pid,{:tweet_retweet})
+  def tweet(pid) do
+    GenServer.cast(pid,{:tweet})
+  end
+
+  def retweet(pid) do
+    GenServer.cast(pid,{:retweet})
   end
 
   def get_my_notifications(pid) do
@@ -36,29 +40,51 @@ Server side function to receive notifs
     IO.inspect(notif_data)
     IO.inspect(node_state)
   end
-  def handle_cast({:tweet_retweet}, node_state) do
+
+@doc """
+Server side function to send tweets
+"""
+  def handle_cast({:tweet}, node_state) do
     my_handle = node_state["handle"]
-      if TwitterClasses.Utils.toss_coin() == 1 do
+    IO.inspect my_handle
+      # if TwitterClasses.Utils.toss_coin() == 1 do
         tweet_data = TwitterClasses.Utils.generate_tweet(my_handle)
         tweet_data_map = %{}
-
-        tweet_data_map = Map.put(tweet_data_map, "tweet_txt", elem(tweet_data, 0))
+        tweet_txt = elem(tweet_data, 0)
+        tweet_data_map = Map.put(tweet_data_map, "tweet_txt",tweet_txt)
         tweet_data_map = Map.put(tweet_data_map, "hashtags", elem(tweet_data, 1))
         tweet_data_map = Map.put(tweet_data_map, "mentions", elem(tweet_data, 2))
         tweet_data_map = Map.put(tweet_data_map, "tweet_hash", elem(tweet_data, 3))
         tweet_data_map = Map.put(tweet_data_map, "new_tweet", true)
         IO.inspect(tweet_data_map)
-        # TODO: Send tweet_data_map to the tracker from here
-      else
-        # coin toss -> heads(0) RETWEET
-        # Pick out a tweet you want the user tp retweet
-        tweet_data_map = %{}
-        {tweet_hash, tweet_text} = TwitterClasses.Utils.get_random_tweet()
-        tweet_data_map = Map.put(tweet_data_map, "tweet_txt", tweet_text)
-        tweet_data_map = Map.put(tweet_data_map, "tweet_hash", tweet_hash)
-        tweet_data_map = Map.put(tweet_data_map, "new_tweet", false)
-        IO.inspect(tweet_data_map)
-        # TODO: Send tweet_data_map to the tracker from here
-      end
+        TwitterClasses.Utils.notify_followers(self(), tweet_txt)
+      # else
+      #   # coin toss -> heads(0) RETWEET
+      #   # Pick out a tweet you want the user tp retweet
+      #   tweet_data_map = %{}
+      #   {tweet_hash, tweet_text} = TwitterClasses.Utils.get_random_tweet()
+      #   tweet_data_map = Map.put(tweet_data_map, "tweet_txt", tweet_text)
+      #   tweet_data_map = Map.put(tweet_data_map, "tweet_hash", tweet_hash)
+      #   tweet_data_map = Map.put(tweet_data_map, "new_tweet", false)
+      #   IO.inspect(tweet_data_map)
+      #   TwitterClasses.DBUtils.add_or_update(:user_tweets, user_handle, {tweet_hash,"retweet"})
+      #   TwitterClasses.Utils.notify_followers(self(), tweet_text)
+      # end
   end
+
+@doc """
+Server side function to send retweets
+"""
+  def handle_cast({:retweet}, node_state) do
+    user_handle = node_state["handle"]
+    tweet_data_map = %{}
+    {tweet_hash, tweet_text} = TwitterClasses.Utils.get_random_tweet()
+    tweet_data_map = Map.put(tweet_data_map, "tweet_txt", tweet_text)
+    tweet_data_map = Map.put(tweet_data_map, "tweet_hash", tweet_hash)
+    tweet_data_map = Map.put(tweet_data_map, "new_tweet", false)
+    IO.inspect(tweet_data_map)
+    TwitterClasses.DBUtils.add_or_update(:user_tweets, user_handle, {tweet_hash,"retweet"})
+    TwitterClasses.Utils.notify_followers(self(), tweet_text)
+  end
+
 end
