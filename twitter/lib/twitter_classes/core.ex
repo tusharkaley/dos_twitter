@@ -7,7 +7,6 @@ defmodule TwitterClasses.Core do
     {:ok, id} = Enum.fetch(init_args, 0)
     {:ok, handle} = Enum.fetch(init_args, 1)
     {:ok, num_tweets} = Enum.fetch(init_args, 2)
-
     node_state = %{"id" => id, "handle" => handle, "my_tweets" => 0, "tweet_thresh" =>num_tweets}
     {:ok, node_state}
   end
@@ -36,13 +35,24 @@ defmodule TwitterClasses.Core do
     GenServer.cast(pid, {:follow_user, follow_handle})
   end
 
+  def query_hashtag(pid, hashtag) do
+    GenServer.cast(pid, {:query_hashtag, hashtag})
+  end
+
+  def query_mention(pid) do
+    GenServer.cast(pid, {:query_mention})
+  end
+
+
 @doc """
 Server side function to get_my_notifs
 """
   def handle_cast({:get_my_notifications}, node_state) do
+    IO.puts "I am here"
     values = TwitterClasses.DBUtils.get_from_table(:user_notifications, self())
-    # TwitterClasses.DBUtils.add_to_table(:user_notifications,self(), [])
-    IO.inspect values
+    IO.puts "Here are your tweets #{inspect values}"
+    Process.sleep(2000)
+    TwitterClasses.DBUtils.delete_from_table(:user_notifications, self())
     {:noreply, node_state}
   end
 @doc """
@@ -50,7 +60,6 @@ Server side function to receive notifs
 """
   def handle_cast({:receive_notifications, notif_data}, node_state) do
     IO.inspect(notif_data)
-    IO.inspect(node_state)
     {:noreply, node_state}
   end
 
@@ -68,9 +77,7 @@ Server side function to send tweets
 """
   def handle_cast({:tweet}, node_state) do
     my_handle = node_state["handle"]
-      # if TwitterClasses.Utils.toss_coin() == 1 do
         tweet_data = TwitterClasses.Utils.generate_tweet(my_handle)
-
         tweet_data_map = %{}
         tweet_txt = elem(tweet_data, 0)
         tweet_data_map = Map.put(tweet_data_map, "tweet_txt",tweet_txt)
@@ -98,6 +105,9 @@ Server side function to send retweets
     {:noreply, node_state}
   end
 
+@doc """
+Server side function to follow a user
+"""
   def handle_cast({:follow_user,follow_handle},node_state) do
     handle_to_pid = TwitterClasses.DBUtils.get_from_table(:aux_info, :handle_to_pid)
     handle_to_pid = elem(handle_to_pid,1)
@@ -105,5 +115,22 @@ Server side function to send retweets
     TwitterClasses.Utils.follow_user(self(), follow_pid)
     {:noreply, node_state}
   end
+
+@doc """
+Server side function to query a hashtag
+"""
+def handle_cast({:query_hashtag,hashtag}, node_state) do
+  tweets = TwitterClasses.Utils.query_hashtag(hashtag)
+  IO.inspect tweets
+end
+
+@doc """
+Server side function to query a mention
+"""
+def handle_cast({:query_mention}, node_state) do
+  my_handle = node_state["handle"]
+  tweets = TwitterClasses.Utils.query_mentions(my_handle)
+  IO.inspect tweets
+end
 
 end

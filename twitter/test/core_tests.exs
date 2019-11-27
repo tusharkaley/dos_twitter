@@ -79,5 +79,30 @@ doctest TwitterClasses.Core
     Supervisor.stop(TwitterClasses.Supervisor)
   end
 
+  test "Get my notifications" do
+    TwitterClasses.DBUtils.create_table(:user_notifications)
+    TwitterClasses.Supervisor.start_link()
+    {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 5, :start => {TwitterClasses.Core, :start_link, [6, "handler", 10]}, :restart => :transient,:type => :worker})
+   #Data for the test
+    TwitterClasses.DBUtils.add_to_table(:user_notifications,{child, ["tweet1","tweet2"]})
+    Process.sleep(2000)
+    reply = TwitterClasses.Core.get_my_notifications(child)
+    Process.sleep(4000)
+    assert reply == :ok
+    Supervisor.stop(TwitterClasses.Supervisor)
+
+      
+  end
+
+  test "Get all tweets" do
+    TwitterClasses.Supervisor.start_link()
+    {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 5, :start => {TwitterClasses.Core, :start_link, [6, "handler", 10]}, :restart => :transient,:type => :worker})
+    #Data for table
+    TwitterClasses.DBUtils.create_table(:user_wall)
+    TwitterClasses.DBUtils.add_to_table(:user_wall,{child,["tweet1,tweet2"]})
+    reply =  TwitterClasses.Core.get_all_tweets(child)
+    assert reply == :ok
+    Supervisor.stop(TwitterClasses.Supervisor)      
+  end
     
 end
