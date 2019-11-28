@@ -38,10 +38,6 @@ defmodule TwitterClasses.Core do
     GenServer.cast(pid, {:follow_user, follow_handle})
   end
 
-  @spec query_mention(atom | pid | {atom, any} | {:via, atom, any}) :: :ok
-  def query_mention(pid) do
-    GenServer.cast(pid, {:query_mention})
-  end
 
 @doc """
 Server side function to receive all tweets
@@ -126,14 +122,5 @@ Server side function to follow a user
     TwitterClasses.Utils.follow_user(self(), follow_pid)
     {:noreply, node_state}
   end
-
-@doc """
-Server side function to query a mention
-"""
-def handle_cast({:query_mention}, node_state) do
-  my_handle = node_state["handle"]
-  _tweets = TwitterClasses.Utils.query_mentions(my_handle)
-  # IO.inspect tweets
-end
 
 end

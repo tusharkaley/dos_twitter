@@ -25,6 +25,9 @@ defmodule TwitterClasses.Tracker do
     GenServer.call(pid, {:query_hashtag, hashtag})
   end
 
+  def query_mention(pid, handle) do
+    GenServer.call(pid, {:query_mention, handle})
+  end
 @doc """
   Init function to set the state of the genserver
 """
@@ -42,7 +45,12 @@ defmodule TwitterClasses.Tracker do
 
     node_state = Map.put(node_state, "num_nodes_done", node_state["num_nodes_done"] + 1)
     num_nodes_done = node_state["num_nodes_done"]
-    Logger.debug("Done count is #{num_nodes_done}")
+    if num_nodes_done == 1 do
+      Logger.debug("#{num_nodes_done} user done sending requested number of messages")
+    else
+      Logger.debug("#{num_nodes_done} users done sending requested number of messages")
+    end
+
     if num_nodes_done == node_state["total_nodes"] do
       # Time to terminate
       send(node_state["terminate_addr"], {:terminate_now, self()})
@@ -52,7 +60,7 @@ defmodule TwitterClasses.Tracker do
   end
 
   def handle_cast({:get_notifications, sender}, node_state) do
-    user_handle = TwitterClasses.DBUtils.get_from_table(:users, sender)
+    _user_handle = TwitterClasses.DBUtils.get_from_table(:users, sender)
     {:noreply, node_state}
   end
 
@@ -137,10 +145,19 @@ defmodule TwitterClasses.Tracker do
     tweets = TwitterClasses.Utils.query_hashtag(hashtag)
     {:reply, tweets, node_state}
   end
+
+  @doc """
+Server side function to query a mention
+"""
+def handle_call({:query_mention, my_handle},_from, node_state) do
+  tweets = TwitterClasses.Utils.query_mentions(my_handle)
+  {:reply, tweets, node_state}
+end
   @doc """
   Server side function to query a hashtag
   """
   def handle_call(:get_stats,_from, node_state) do
     {:reply, node_state, node_state}
   end
+
 end

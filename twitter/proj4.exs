@@ -1,11 +1,10 @@
 
-dynamic_num_nodes = 10
-# try do
+try do
   # Check if we have correct arguments
 
-	# if length(System.argv) != 2 do
-	# 	raise ArgumentError
-	# end
+	if length(System.argv) != 2 do
+		raise ArgumentError
+	end
 	# Pick up the arguments
 	[num_user, num_msgs] = System.argv
   num_user = elem(Integer.parse(num_user), 0)
@@ -27,7 +26,7 @@ dynamic_num_nodes = 10
   TwitterClasses.DBUtils.add_to_table(:aux_info, {:pid_to_handle, pid_to_handle})
   TwitterClasses.DBUtils.add_to_table(:aux_info, {:handle_to_pid, handle_to_pid})
 
-  # Creating tweet tables
+  # Creating tables
   TwitterClasses.DBUtils.create_table(:tweets)
   TwitterClasses.DBUtils.create_table(:hashtags)
   TwitterClasses.DBUtils.create_table(:mentions)
@@ -36,11 +35,14 @@ dynamic_num_nodes = 10
   TwitterClasses.DBUtils.create_table(:user_notifications)
   TwitterClasses.DBUtils.create_table(:user_wall)
   TwitterClasses.DBUtils.add_to_table(:user_followers, {"user_followers",%{}})
+
   pid_keys = Map.keys(pid_to_handle)
+  IO.puts("Setting the followers for users")
   Enum.each(pid_keys, fn x->
     TwitterClasses.Utils.set_followers(x, num_user)
   end)
-
+  # user_foll = :ets.tab2list(:user_followers)
+  # IO.inspect(user_foll)
   # Enum.each(1..5, fn x ->
   #   {:ok, temp} = Enum.fetch(Enum.take_random(handles,1),0)
   #   TwitterClasses.Utils.generate_tweet(temp)
@@ -52,7 +54,7 @@ dynamic_num_nodes = 10
 
   # Adding Simulator
 
-  #
+  IO.puts("Triggering tweets")
   TwitterClasses.Simulator.trigger_tweet()
 
   receive do
@@ -63,9 +65,9 @@ dynamic_num_nodes = 10
   Supervisor.stop(TwitterClasses.Supervisor)
   final_time = Time.utc_now()
   time_diff = Time.diff(final_time, start_time, :millisecond)
-  IO.puts("Total time taken #{time_diff} milliseconds")
+  IO.puts("Total time taken #{time_diff/1000} seconds")
 
-# rescue
-# 	e in ArgumentError ->  IO.puts(e)
-# 	System.stop(1)
-# end
+rescue
+	e in ArgumentError ->  IO.puts(e)
+	System.stop(1)
+end
