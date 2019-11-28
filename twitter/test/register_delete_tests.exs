@@ -4,6 +4,7 @@ defmodule RegisterDeleteTests do
   doctest TwitterClasses.Utils
 
   test "Test adding core users " do
+    TwitterClasses.Supervisor.start_link()
     TwitterClasses.Utils.add_core_users(TwitterClasses.Core, 5, self(),10)
     assert Supervisor.count_children(TwitterClasses.Supervisor).active == 7
     Supervisor.stop(TwitterClasses.Supervisor)
