@@ -10,12 +10,15 @@ defmodule TwitterClasses.Utils do
 
     TwitterClasses.DBUtils.create_table(:users)
     {:ok, agg} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => :tracker, :start => {TwitterClasses.Tracker, :start_link, [num_nodes, script_pid]}, :restart => :transient,:type => :worker})
+    {:ok, sim} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => :simulator, :start => {TwitterClasses.Simulator, :start_link, []}, :restart => :transient,:type => :worker})
+
     Logger.debug("Added Tracker on #{inspect agg}")
+    Logger.debug("Added Simulator on #{inspect sim}")
     map = Enum.reduce(1..num_nodes, %{},  fn x, acc ->
       handle = get_random_handle()
       {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => x, :start => {child_class, :start_link, [x, handle, num_msgs]}, :restart => :transient,:type => :worker})
       add_user(handle, x, child)
-      Logger.debug("User added to table #{inspect :ets.lookup(:users, handle)}")
+      # Logger.debug("User added to table #{inspect :ets.lookup(:users, handle)}")
       Map.put(acc, child, handle)
     end)
     map
@@ -32,13 +35,13 @@ defmodule TwitterClasses.Utils do
     temp = :crypto.strong_rand_bytes(len) |> Base.url_encode64 |> binary_part(0, len)
     "@"<>temp
   end
+
   def add_user(handle, id, pid) do
     # Storing users in a table in
     TwitterClasses.DBUtils.add_to_table(:users, {pid, true, true, id, handle})
   end
 
   def delete_user(pid) do
-
     value = TwitterClasses.DBUtils.get_from_table(:users, pid)
     value = put_elem(value, 1, false)
     TwitterClasses.DBUtils.delete_from_table(:users, pid)
@@ -46,19 +49,23 @@ defmodule TwitterClasses.Utils do
 
   end
 
-
-
-  def generate_tweet(user_handle) do
+  def generate_tweet(user_handle, men \\[], hash \\[]) do
       rand_num = Enum.random(1..7)
       handles = TwitterClasses.DBUtils.get_from_table(:aux_info, :user_handles)
       handles = elem(handles, 1)
       handles = List.delete(handles, user_handle)
 
       tweet = Enum.take_random(@words, rand_num)
+
       mentions = if toss_coin() == 1 do
         Enum.take_random(handles, 1)
       else
         []
+      end
+      mentions = if length(men)>0 do
+        mentions ++ men
+      else
+        mentions
       end
 
       tweet = if length(mentions) > 0 do
@@ -77,7 +84,11 @@ defmodule TwitterClasses.Utils do
       else
         []
       end
-
+      hashtags = if length(hash)>0 do
+        hashtags ++ hash
+      else
+        hashtags
+      end
       tweet = if length(hashtags) > 0 do
         tweet ++ hashtags
       else
@@ -87,10 +98,11 @@ defmodule TwitterClasses.Utils do
       tweet = Enum.join(tweet, " ")
 
       tweet_hash = get_tweet_hash(tweet)
+      # IO.inspect tweet_hash
       TwitterClasses.DBUtils.add_to_table(:tweets, {tweet_hash, tweet})
       TwitterClasses.Utils.save_mentions_hashtags_to_table(:hashtags, tweet_hash, hashtags)
       TwitterClasses.Utils.save_mentions_hashtags_to_table(:mentions, tweet_hash, mentions)
-      TwitterClasses.DBUtils.add_or_update(:user_tweets, user_handle, tweet_hash)
+      TwitterClasses.DBUtils.add_or_update(:user_tweets, user_handle, {tweet_hash,"tweet"})
 
       {tweet, hashtags, mentions, tweet_hash}
   end
@@ -108,7 +120,6 @@ defmodule TwitterClasses.Utils do
       Enum.each(entity, fn x ->
         TwitterClasses.DBUtils.add_or_update(table, x, tweet_hash)
       end)
-
     end
   end
 
@@ -116,7 +127,50 @@ defmodule TwitterClasses.Utils do
     all_tweets = :ets.tab2list(:tweets)
     {:ok, random_tweet} = Enum.fetch(Enum.take_random(all_tweets, 1), 0)
     random_tweet
+  end
 
+  def set_followers(user_pid,num_nodes) do
+    max_followers = trunc(0.8*num_nodes)
+    num_followers = 1..max_followers
+    user_pids = TwitterClasses.DBUtils.get_from_table(:aux_info, :pid_to_handle)
+    user_pids = elem(user_pids, 1)
+    all_user_pids = Map.keys user_pids
+    all_user_pids = List.delete all_user_pids, user_pid
+    followers = Enum.take_random all_user_pids, Enum.random(num_followers)
+    user_followers = TwitterClasses.DBUtils.get_from_table(:user_followers,"user_followers")
+    user_followers = elem(user_followers,1)
+
+    user_followers = Map.put user_followers, user_pid, followers
+    #add to table
+    TwitterClasses.DBUtils.add_to_table(:user_followers, {"user_followers",user_followers})
+  end
+
+  def follow_user(user_pid, subscribe_to_user) do
+    user_followers = TwitterClasses.DBUtils.get_from_table(:user_followers,"user_followers")
+    user_followers = elem(user_followers,1)
+
+    followers =if Map.has_key? user_followers, subscribe_to_user do
+      Map.get user_followers, subscribe_to_user
+    else
+      []
+    end
+
+    followers =
+    if length(followers) >0 do
+      followers ++ [user_pid]
+    else
+      [user_pid]
+    end
+    user_followers = Map.put user_followers, subscribe_to_user, followers
+    TwitterClasses.DBUtils.add_to_table(:user_followers, {"user_followers",user_followers})
+  end
+
+  def query_hashtag(hashtag) do
+    TwitterClasses.DBUtils.get_from_table(:hashtags,hashtag)
+  end
+
+  def query_mentions(handle) do
+  TwitterClasses.DBUtils.get_from_table(:mentions,handle)
   end
 
 end

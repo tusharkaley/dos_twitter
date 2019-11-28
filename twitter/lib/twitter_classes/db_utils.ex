@@ -1,6 +1,6 @@
 defmodule TwitterClasses.DBUtils do
   def create_table(table_name) do
-    :ets.new(table_name, [:named_table, read_concurrency: true])
+    :ets.new(table_name, [:named_table, :public, read_concurrency: true])
   end
 
   def get_from_table(table_name, key) do
@@ -8,7 +8,7 @@ defmodule TwitterClasses.DBUtils do
     res = if length(res)>0 do
         {:ok, res} = Enum.fetch(res, 0)
         res
-    else
+    else      
         {}
     end
     res

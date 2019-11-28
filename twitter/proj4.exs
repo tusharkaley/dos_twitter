@@ -13,14 +13,13 @@ dynamic_num_nodes = 10
   start_time = Time.utc_now()
   # Adding the core users to the supervisor
   pid_to_handle = TwitterClasses.Utils.add_core_users(TwitterClasses.Core, num_user, self(), num_msgs)
-
+  # Get the handle to pid map
   handle_to_pid = Enum.reduce(pid_to_handle, %{}, fn {k, vs}, acc ->
     Map.put(acc,vs,k)
   end)
   handles = Map.values(pid_to_handle)
 
-
-  # create the aux_info table
+  # Create the aux_info table
   TwitterClasses.DBUtils.create_table(:aux_info)
 
   # add handles to the aux_info table
@@ -33,26 +32,34 @@ dynamic_num_nodes = 10
   TwitterClasses.DBUtils.create_table(:hashtags)
   TwitterClasses.DBUtils.create_table(:mentions)
   TwitterClasses.DBUtils.create_table(:user_tweets)
-
-  # IO.puts("The number of children is #{inspect Supervisor.count_children(TwitterClasses.Supervisor)}")
-
-  Enum.each(1..5, fn x ->
-    {:ok, temp} = Enum.fetch(Enum.take_random(handles,1),0)
-
-    TwitterClasses.Utils.generate_tweet(temp)
+  TwitterClasses.DBUtils.create_table(:user_followers)
+  TwitterClasses.DBUtils.create_table(:user_notifications)
+  TwitterClasses.DBUtils.create_table(:user_wall)
+  TwitterClasses.DBUtils.add_to_table(:user_followers, {"user_followers",%{}})
+  pid_keys = Map.keys(pid_to_handle)
+  Enum.each(pid_keys, fn x->
+    TwitterClasses.Utils.set_followers(x, num_user)
   end)
 
-  {tweet_hash, tweet_text} = TwitterClasses.Utils.get_random_tweet()
- 
+  # Enum.each(1..5, fn x ->
+  #   {:ok, temp} = Enum.fetch(Enum.take_random(handles,1),0)
+  #   TwitterClasses.Utils.generate_tweet(temp)
+  # end)
+
+  # {tweet_hash, tweet_text} = TwitterClasses.Utils.get_random_tweet()
+
   # Register core users
 
   # Adding Simulator
 
   #
+  TwitterClasses.Simulator.trigger_tweet()
 
-  # receive do
-  #   {:terminate_now, _pid} -> IO.puts("Terminating Supervisor")
-  # end
+  receive do
+    {:terminate_now, _pid} -> IO.puts("Terminating Supervisor")
+    temp = GenServer.call(:tracker, :get_stats)
+    IO.inspect(temp)
+  end
   Supervisor.stop(TwitterClasses.Supervisor)
   final_time = Time.utc_now()
   time_diff = Time.diff(final_time, start_time, :millisecond)
