@@ -84,11 +84,12 @@ doctest TwitterClasses.Core
     TwitterClasses.Supervisor.start_link()
     {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 5, :start => {TwitterClasses.Core, :start_link, [6, "handler", 10]}, :restart => :transient,:type => :worker})
    #Data for the test
-    TwitterClasses.DBUtils.add_to_table(:user_notifications,{child, ["tweet1","tweet2"]})
+   data = {child,["tweet1,tweet2"]}
+    TwitterClasses.DBUtils.add_to_table(:user_notifications,data)
     Process.sleep(2000)
-    reply = TwitterClasses.Core.get_my_notifications(child)
+    tweets = TwitterClasses.Core.get_my_notifications(child)
     Process.sleep(4000)
-    assert reply == :ok
+    assert data == tweets
     Supervisor.stop(TwitterClasses.Supervisor)
   end
 
@@ -104,5 +105,57 @@ doctest TwitterClasses.Core
     assert data == tweets
     Supervisor.stop(TwitterClasses.Supervisor)
   end
+
+  
+  test "Query hashtag 1" do
+    TwitterClasses.Supervisor.start_link()
+    {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 5, :start => {TwitterClasses.Core, :start_link, [6, "handler", 10]}, :restart => :transient,:type => :worker})
+    TwitterClasses.DBUtils.create_table(:hashtags)
+    #Data for table
+    tweet_hash = TwitterClasses.Utils.get_tweet_hash("#gogators UF rocks #swamp")
+    hashtags = ["#gogators","#swamp"]
+    if length(hashtags)>0 do
+        Enum.each(hashtags, fn x ->
+          TwitterClasses.DBUtils.add_or_update(:hashtags, x, tweet_hash)
+        end)
+      end
+    tweet= TwitterClasses.Utils.query_hashtag("#gogators")
+    assert tweet == [tweet_hash]
+    Supervisor.stop(TwitterClasses.Supervisor)
+
+  end
+
+  test "Query hashtag 2" do
+    TwitterClasses.Supervisor.start_link()
+    {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 5, :start => {TwitterClasses.Core, :start_link, [6, "handler", 10]}, :restart => :transient,:type => :worker})
+    TwitterClasses.DBUtils.create_table(:hashtags)
+    #Data for table
+    tweet_hash = TwitterClasses.Utils.get_tweet_hash("#gogators UF rocks #swamp")
+    hashtags = ["#gogators","#swamp"]
+    if length(hashtags)>0 do
+        Enum.each(hashtags, fn x ->
+          TwitterClasses.DBUtils.add_or_update(:hashtags, x, tweet_hash)
+        end)
+      end
+    tweet= TwitterClasses.Utils.query_hashtag("#swamp")
+    assert tweet == [tweet_hash]
+    Supervisor.stop(TwitterClasses.Supervisor)
+
+  end
+
+  test "Query Mention" do
+    TwitterClasses.Supervisor.start_link()
+    {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 5, :start => {TwitterClasses.Core, :start_link, [6, "handler", 10]}, :restart => :transient,:type => :worker})
+    TwitterClasses.DBUtils.create_table(:mentions)
+    tweet_hash = TwitterClasses.Utils.get_tweet_hash("@gators UF rocks")
+    TwitterClasses.DBUtils.add_to_table(:mentions, {"@gators", tweet_hash})
+    tweet= TwitterClasses.Utils.query_mentions("@gators")
+    Process.sleep(100)
+    assert tweet == tweet_hash
+    assert true
+    Supervisor.stop(TwitterClasses.Supervisor)
+
+  end
+
 
 end
