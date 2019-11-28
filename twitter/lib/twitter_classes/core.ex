@@ -22,7 +22,7 @@ defmodule TwitterClasses.Core do
   end
 
   def get_my_notifications(pid) do
-    GenServer.cast(pid, {:get_my_notifications})
+    GenServer.call(pid, :get_my_notifications)
   end
 
   def get_all_tweets(pid) do
@@ -58,11 +58,11 @@ end
 @doc """
 Server side function to get_my_notifs
 """
-def handle_cast({:get_my_notifications}, node_state) do
+def handle_call(:get_my_notifications,_from, node_state) do
   values = TwitterClasses.DBUtils.get_from_table(:user_notifications, self())
-  Process.sleep(1000)
+  Process.sleep(100)
   TwitterClasses.DBUtils.delete_from_table(:user_notifications, self())
-  {:noreply, node_state}
+  {:reply, values, node_state}
 end
 
 @doc """

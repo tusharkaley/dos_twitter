@@ -166,11 +166,13 @@ defmodule TwitterClasses.Utils do
   end
 
   def query_hashtag(hashtag) do
-    TwitterClasses.DBUtils.get_from_table(:hashtags,hashtag)
+     {hashtag, tweets} = TwitterClasses.DBUtils.get_from_table(:hashtags,hashtag)
+     tweets
   end
 
   def query_mentions(handle) do
-  TwitterClasses.DBUtils.get_from_table(:mentions,handle)
+    {handle, tweets} = TwitterClasses.DBUtils.get_from_table(:mentions,handle)
+    tweets
   end
 
 end
