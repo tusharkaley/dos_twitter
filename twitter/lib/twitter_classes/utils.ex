@@ -49,17 +49,23 @@ defmodule TwitterClasses.Utils do
 
   end
 
-  def generate_tweet(user_handle) do
+  def generate_tweet(user_handle, men \\[], hash \\[]) do
       rand_num = Enum.random(1..7)
       handles = TwitterClasses.DBUtils.get_from_table(:aux_info, :user_handles)
       handles = elem(handles, 1)
       handles = List.delete(handles, user_handle)
 
       tweet = Enum.take_random(@words, rand_num)
+
       mentions = if toss_coin() == 1 do
         Enum.take_random(handles, 1)
       else
         []
+      end
+      mentions = if length(men)>0 do
+        mentions ++ men
+      else
+        mentions
       end
 
       tweet = if length(mentions) > 0 do
@@ -78,7 +84,11 @@ defmodule TwitterClasses.Utils do
       else
         []
       end
-
+      hashtags = if length(hash)>0 do
+        hashtags ++ hash
+      else
+        hashtags
+      end
       tweet = if length(hashtags) > 0 do
         tweet ++ hashtags
       else
@@ -88,7 +98,7 @@ defmodule TwitterClasses.Utils do
       tweet = Enum.join(tweet, " ")
 
       tweet_hash = get_tweet_hash(tweet)
-      IO.inspect tweet_hash
+      # IO.inspect tweet_hash
       TwitterClasses.DBUtils.add_to_table(:tweets, {tweet_hash, tweet})
       TwitterClasses.Utils.save_mentions_hashtags_to_table(:hashtags, tweet_hash, hashtags)
       TwitterClasses.Utils.save_mentions_hashtags_to_table(:mentions, tweet_hash, mentions)

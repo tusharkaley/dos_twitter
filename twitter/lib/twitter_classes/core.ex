@@ -26,51 +26,46 @@ defmodule TwitterClasses.Core do
   end
 
   def get_all_tweets(pid) do
-    GenServer.cast(pid, {:get_all_tweets})
+    GenServer.call(pid, :get_all_tweets)
   end
 
   def receive_notifications(pid, notif_data) do
     GenServer.cast(pid, {:receive_notifications, notif_data})
   end
 
+  @spec follow_user(atom | pid | {atom, any} | {:via, atom, any}, any) :: :ok
   def follow_user(pid, follow_handle) do
     GenServer.cast(pid, {:follow_user, follow_handle})
   end
 
-  def query_hashtag(pid, hashtag) do
-    GenServer.cast(pid, {:query_hashtag, hashtag})
-  end
-
+  @spec query_mention(atom | pid | {atom, any} | {:via, atom, any}) :: :ok
   def query_mention(pid) do
     GenServer.cast(pid, {:query_mention})
-  end
-
-
-@doc """
-Server side function to get_my_notifs
-"""
-  def handle_cast({:get_my_notifications}, node_state) do
-    IO.puts "I am here"
-    values = TwitterClasses.DBUtils.get_from_table(:user_notifications, self())
-    IO.puts "Here are your tweets #{inspect values}"
-    Process.sleep(2000)
-    TwitterClasses.DBUtils.delete_from_table(:user_notifications, self())
-    {:noreply, node_state}
-  end
-@doc """
-Server side function to receive notifs
-"""
-  def handle_cast({:receive_notifications, notif_data}, node_state) do
-    IO.inspect(notif_data)
-    {:noreply, node_state}
   end
 
 @doc """
 Server side function to receive all tweets
 """
-def handle_cast({:get_all_tweets}, node_state) do
+def handle_call(:get_all_tweets,_from, node_state) do
   values = TwitterClasses.DBUtils.get_from_table(:user_wall, self())
-  IO.inspect values
+  {:reply, values, node_state}
+end
+
+@doc """
+Server side function to receive notifs
+"""
+def handle_cast({:receive_notifications, _notif_data}, node_state) do
+  # IO.inspect(notif_data)
+  {:noreply, node_state}
+end
+
+@doc """
+Server side function to get_my_notifs
+"""
+def handle_cast({:get_my_notifications}, node_state) do
+  values = TwitterClasses.DBUtils.get_from_table(:user_notifications, self())
+  Process.sleep(1000)
+  TwitterClasses.DBUtils.delete_from_table(:user_notifications, self())
   {:noreply, node_state}
 end
 
@@ -133,20 +128,12 @@ Server side function to follow a user
   end
 
 @doc """
-Server side function to query a hashtag
-"""
-def handle_cast({:query_hashtag,hashtag}, node_state) do
-  tweets = TwitterClasses.Utils.query_hashtag(hashtag)
-  IO.inspect tweets
-end
-
-@doc """
 Server side function to query a mention
 """
 def handle_cast({:query_mention}, node_state) do
   my_handle = node_state["handle"]
-  tweets = TwitterClasses.Utils.query_mentions(my_handle)
-  IO.inspect tweets
+  _tweets = TwitterClasses.Utils.query_mentions(my_handle)
+  # IO.inspect tweets
 end
 
 end

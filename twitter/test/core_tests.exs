@@ -90,18 +90,18 @@ doctest TwitterClasses.Core
     Process.sleep(4000)
     assert reply == :ok
     Supervisor.stop(TwitterClasses.Supervisor)
-
-
   end
 
   test "Get all tweets" do
     TwitterClasses.Supervisor.start_link()
     {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 5, :start => {TwitterClasses.Core, :start_link, [6, "handler", 10]}, :restart => :transient,:type => :worker})
     #Data for table
+    data = {child,["tweet1,tweet2"]}
     TwitterClasses.DBUtils.create_table(:user_wall)
-    TwitterClasses.DBUtils.add_to_table(:user_wall,{child,["tweet1,tweet2"]})
-    reply =  TwitterClasses.Core.get_all_tweets(child)
-    assert reply == :ok
+    TwitterClasses.DBUtils.add_to_table(:user_wall,data)
+    Process.sleep(100)
+    tweets=  TwitterClasses.Core.get_all_tweets(child)
+    assert data == tweets
     Supervisor.stop(TwitterClasses.Supervisor)
   end
 

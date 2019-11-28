@@ -21,13 +21,17 @@ defmodule TwitterClasses.Tracker do
     GenServer.cast(:tracker, {:notify_users, user_pid, tweet})
   end
 
+  def query_hashtag(pid, hashtag) do
+    GenServer.call(pid, {:query_hashtag, hashtag})
+  end
+
 @doc """
   Init function to set the state of the genserver
 """
   def init(init_args) do
     {:ok, total_nodes} = Enum.fetch(init_args, 0)
     {:ok, script_pid} = Enum.fetch(init_args, 1)
-    node_state = %{"num_nodes_done" => 0, "total_nodes" => total_nodes, "terminate_addr"=> script_pid}
+    node_state = %{"num_nodes_done" => 0, "total_nodes" => total_nodes, "terminate_addr"=> script_pid, "num_tweets" => 0, "num_retweets"=>0, "num_mentions"  => 0, "num_hashtags"=>0}
     {:ok, node_state}
   end
 
@@ -60,7 +64,13 @@ defmodule TwitterClasses.Tracker do
     followers_map = elem(followers_map, 1)
     followers = Map.get followers_map, source
     tweet_hash = Map.get(tweet, "tweet_hash")
+    t_or_rt = Map.get(tweet, "new_tweet")
 
+    node_state = if  t_or_rt == true do
+      Map.put(node_state, "num_tweets", node_state["num_tweets"]+1)
+    else
+      Map.put(node_state, "num_retweets", node_state["num_retweets"]+1)
+    end
     # notify followers
     Enum.each followers, fn(user) ->
       values = TwitterClasses.DBUtils.get_from_table(:users, user)
@@ -85,10 +95,9 @@ defmodule TwitterClasses.Tracker do
     end
 
     # If its a new tweet and it has mentions then notify the users
+
     if Map.get(tweet, "new_tweet") do
       mentions = Map.get(tweet, "mentions")
-      IO.puts("TUSHAR KALEY")
-      IO.inspect(mentions)
       handle_to_pid = TwitterClasses.DBUtils.get_from_table(:aux_info, :handle_to_pid)
       handle_to_pid = elem(handle_to_pid, 1)
       Enum.each(mentions, fn x ->
@@ -107,9 +116,31 @@ defmodule TwitterClasses.Tracker do
           TwitterClasses.DBUtils.add_or_update(:user_notifications, pid, {tweet_hash,source})
         end
       end)
+    else
+      node_state
     end
-
+    node_state = if Map.get(tweet, "new_tweet") do
+      mentions = Map.get(tweet, "mentions")
+      hashtags = Map.get(tweet, "hashtags")
+      ns = Map.put(node_state, "num_mentions", node_state["num_mentions"]+length(mentions))
+      ns = Map.put(ns, "num_hashtags", node_state["num_hashtags"]+length(hashtags))
+      ns
+    else
+      node_state
+    end
     {:noreply, node_state}
 	end
-
+  @doc """
+  Server side function to query a hashtag
+  """
+  def handle_call({:query_hashtag,hashtag},_from, node_state) do
+    tweets = TwitterClasses.Utils.query_hashtag(hashtag)
+    {:reply, tweets, node_state}
+  end
+  @doc """
+  Server side function to query a hashtag
+  """
+  def handle_call(:get_stats,_from, node_state) do
+    {:reply, node_state, node_state}
+  end
 end

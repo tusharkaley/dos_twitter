@@ -43,7 +43,6 @@ dynamic_num_nodes = 10
 
   # Enum.each(1..5, fn x ->
   #   {:ok, temp} = Enum.fetch(Enum.take_random(handles,1),0)
-
   #   TwitterClasses.Utils.generate_tweet(temp)
   # end)
 
@@ -55,8 +54,11 @@ dynamic_num_nodes = 10
 
   #
   TwitterClasses.Simulator.trigger_tweet()
+
   receive do
     {:terminate_now, _pid} -> IO.puts("Terminating Supervisor")
+    temp = GenServer.call(:tracker, :get_stats)
+    IO.inspect(temp)
   end
   Supervisor.stop(TwitterClasses.Supervisor)
   final_time = Time.utc_now()
