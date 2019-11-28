@@ -1,4 +1,5 @@
 defmodule TwitterClasses.Core do
+  require Logger
   def start_link(id, handle, num_tweets) do
     GenServer.start_link(__MODULE__, [id, handle, num_tweets])
   end
@@ -12,6 +13,7 @@ defmodule TwitterClasses.Core do
   end
 
   def tweet(pid) do
+    # Logger.debug("Inside Tweet #{inspect pid}")
     GenServer.cast(pid,{:tweet})
   end
 
@@ -70,7 +72,7 @@ def handle_cast({:get_all_tweets}, node_state) do
   values = TwitterClasses.DBUtils.get_from_table(:user_wall, self())
   IO.inspect values
   {:noreply, node_state}
-end  
+end
 
 @doc """
 Server side function to send tweets
@@ -85,9 +87,16 @@ Server side function to send tweets
         tweet_data_map = Map.put(tweet_data_map, "mentions", elem(tweet_data, 2))
         tweet_data_map = Map.put(tweet_data_map, "tweet_hash", elem(tweet_data, 3))
         tweet_data_map = Map.put(tweet_data_map, "new_tweet", true)
-        TwitterClasses.Tracker.notify_followers(self(), tweet_txt)
+        node_state= Map.put(node_state, "my_tweets", node_state["my_tweets"]+1)
+        my_tweet_count = Map.get(node_state, "my_tweets")
+        tweet_thresh = Map.get(node_state, "tweet_thresh")
+        if my_tweet_count == tweet_thresh do
+          # Logger.debug("DONE!!")
+          TwitterClasses.Tracker.tweets_done(self())
+        end
+        TwitterClasses.Tracker.notify_users(self(), tweet_data_map)
         {:noreply, node_state}
-        
+
   end
 
 @doc """
@@ -101,7 +110,14 @@ Server side function to send retweets
     tweet_data_map = Map.put(tweet_data_map, "tweet_hash", tweet_hash)
     tweet_data_map = Map.put(tweet_data_map, "new_tweet", false)
     TwitterClasses.DBUtils.add_or_update(:user_tweets, user_handle, {tweet_hash,"retweet"})
-    TwitterClasses.Tracker.notify_followers(self(), tweet_text)
+    node_state= Map.put(node_state, "my_tweets", node_state["my_tweets"]+1)
+    my_tweet_count = Map.get(node_state, "my_tweets")
+    tweet_thresh = Map.get(node_state, "tweet_thresh")
+    if my_tweet_count == tweet_thresh do
+      # Logger.debug("DONE!!")
+      TwitterClasses.Tracker.tweets_done(self())
+    end
+    TwitterClasses.Tracker.notify_users(self(), tweet_data_map)
     {:noreply, node_state}
   end
 

@@ -1,11 +1,11 @@
 defmodule RegisterDeleteTests do
- 
+
   use ExUnit.Case
   doctest TwitterClasses.Utils
 
   test "Test adding core users " do
     TwitterClasses.Utils.add_core_users(TwitterClasses.Core, 5, self(),10)
-    assert Supervisor.count_children(TwitterClasses.Supervisor).active == 6
+    assert Supervisor.count_children(TwitterClasses.Supervisor).active == 7
     Supervisor.stop(TwitterClasses.Supervisor)
   end
 

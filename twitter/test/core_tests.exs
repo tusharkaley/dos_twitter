@@ -18,9 +18,9 @@ doctest TwitterClasses.Core
 
     TwitterClasses.Supervisor.start_link()
     {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 3, :start => {TwitterClasses.Core, :start_link, [2, "handle", 10]}, :restart => :transient,:type => :worker})
-    
+
     TwitterClasses.Core.tweet(child)
-    Process.sleep(5000)
+    Process.sleep(4000)
     {"handle",tweets}= TwitterClasses.DBUtils.get_from_table(:user_tweets, "handle")
     last =  List.last tweets
     {a,b} = last
@@ -44,7 +44,7 @@ doctest TwitterClasses.Core
 
     TwitterClasses.Supervisor.start_link()
     {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 1, :start => {TwitterClasses.Core, :start_link, [4, "handler", 10]}, :restart => :transient,:type => :worker})
-    
+
     TwitterClasses.DBUtils.add_to_table(:tweets, {"tweet_hash", "tweet"})
     TwitterClasses.Core.retweet(child)
     Process.sleep(5000)
@@ -91,7 +91,7 @@ doctest TwitterClasses.Core
     assert reply == :ok
     Supervisor.stop(TwitterClasses.Supervisor)
 
-      
+
   end
 
   test "Get all tweets" do
@@ -102,7 +102,7 @@ doctest TwitterClasses.Core
     TwitterClasses.DBUtils.add_to_table(:user_wall,{child,["tweet1,tweet2"]})
     reply =  TwitterClasses.Core.get_all_tweets(child)
     assert reply == :ok
-    Supervisor.stop(TwitterClasses.Supervisor)      
+    Supervisor.stop(TwitterClasses.Supervisor)
   end
-    
+
 end

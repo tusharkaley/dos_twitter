@@ -10,12 +10,15 @@ defmodule TwitterClasses.Utils do
 
     TwitterClasses.DBUtils.create_table(:users)
     {:ok, agg} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => :tracker, :start => {TwitterClasses.Tracker, :start_link, [num_nodes, script_pid]}, :restart => :transient,:type => :worker})
+    {:ok, sim} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => :simulator, :start => {TwitterClasses.Simulator, :start_link, []}, :restart => :transient,:type => :worker})
+
     Logger.debug("Added Tracker on #{inspect agg}")
+    Logger.debug("Added Simulator on #{inspect sim}")
     map = Enum.reduce(1..num_nodes, %{},  fn x, acc ->
       handle = get_random_handle()
       {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => x, :start => {child_class, :start_link, [x, handle, num_msgs]}, :restart => :transient,:type => :worker})
       add_user(handle, x, child)
-      Logger.debug("User added to table #{inspect :ets.lookup(:users, handle)}")
+      # Logger.debug("User added to table #{inspect :ets.lookup(:users, handle)}")
       Map.put(acc, child, handle)
     end)
     map
@@ -90,7 +93,7 @@ defmodule TwitterClasses.Utils do
       TwitterClasses.Utils.save_mentions_hashtags_to_table(:hashtags, tweet_hash, hashtags)
       TwitterClasses.Utils.save_mentions_hashtags_to_table(:mentions, tweet_hash, mentions)
       TwitterClasses.DBUtils.add_or_update(:user_tweets, user_handle, {tweet_hash,"tweet"})
-      
+
       {tweet, hashtags, mentions, tweet_hash}
   end
 
@@ -136,13 +139,12 @@ defmodule TwitterClasses.Utils do
     user_followers = TwitterClasses.DBUtils.get_from_table(:user_followers,"user_followers")
     user_followers = elem(user_followers,1)
 
-    followers = 
-    if Map.has_key? user_followers, subscribe_to_user do
+    followers =if Map.has_key? user_followers, subscribe_to_user do
       Map.get user_followers, subscribe_to_user
     else
       []
     end
-   
+
     followers =
     if length(followers) >0 do
       followers ++ [user_pid]
