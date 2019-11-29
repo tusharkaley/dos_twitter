@@ -21,12 +21,12 @@ defmodule TwitterClasses.Tracker do
     GenServer.cast(:tracker, {:notify_users, user_pid, tweet})
   end
 
-  def query_hashtag(pid, hashtag) do
-    GenServer.call(pid, {:query_hashtag, hashtag})
+  def query_hashtag(hashtag) do
+    GenServer.call(:tracker, {:query_hashtag, hashtag})
   end
 
-  def query_mention(pid, handle) do
-    GenServer.call(pid, {:query_mention, handle})
+  def query_mention(handle) do
+    GenServer.call(:tracker, {:query_mention, handle})
   end
 @doc """
   Init function to set the state of the genserver

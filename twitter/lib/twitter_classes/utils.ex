@@ -171,7 +171,7 @@ defmodule TwitterClasses.Utils do
   end
 
   def query_mentions(handle) do
-    {handle, tweets} = TwitterClasses.DBUtils.get_from_table(:mentions,handle)
+    {_handle, tweets} = TwitterClasses.DBUtils.get_from_table(:mentions, handle)
     tweets
   end
 

@@ -60,7 +60,7 @@ Server side function to get_my_notifs
 """
 def handle_call(:get_my_notifications,_from, node_state) do
   values = TwitterClasses.DBUtils.get_from_table(:user_notifications, self())
-  Process.sleep(100)
+  # Process.sleep(100)
   TwitterClasses.DBUtils.delete_from_table(:user_notifications, self())
   {:reply, values, node_state}
 end
