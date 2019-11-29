@@ -1,6 +1,8 @@
 # dos_twitter
 
 # Run tests
+Navigate to the ```dos_twitter/twitter``` folder
+Run the following command
 ```mix test test/* --seed 0 --trace```
 
 # These are the building blocks of this project:

@@ -32,7 +32,11 @@ defmodule TwitterClasses.Simulator do
     def handle_info({:high_freq_tweet,power_users}, node_state) do
       user = Enum.random(power_users)
       {:ok, user} = Enum.fetch(user, 0)
-      TwitterClasses.Core.tweet(user)
+      if TwitterClasses.Utils.toss_coin() == 1 do
+        TwitterClasses.Core.tweet(user)
+      else
+        TwitterClasses.Core.retweet(user)
+      end
       high_freq_tweet(power_users)
       {:noreply, node_state}
     end
