@@ -70,7 +70,7 @@ doctest TwitterClasses.Core
     {:ok, child} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 5, :start => {TwitterClasses.Core, :start_link, [6, "handler", 10]}, :restart => :transient,:type => :worker})
     TwitterClasses.Core.follow_user(child, "follow_handle")
 
-    Process.sleep(1000)
+    Process.sleep(100)
 
     user_followers = TwitterClasses.DBUtils.get_from_table(:user_followers,"user_followers")
     user_followers = elem(user_followers,1)
