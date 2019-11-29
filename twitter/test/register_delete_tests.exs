@@ -14,7 +14,6 @@ defmodule RegisterDeleteTests do
     TwitterClasses.Supervisor.start_link()
     TwitterClasses.Utils.add_core_users(TwitterClasses.Core, 5, self(),10)
     user_list = :ets.tab2list(:users)
-    IO.puts("Delete debug")
     # IO.inspect(user_list)
     {:ok, user_pids} = Enum.fetch(user_list, 0)
     # IO.inspect(user_pids)

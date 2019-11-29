@@ -24,12 +24,6 @@ defmodule TwitterClasses.Utils do
     map
   end
 
-  def register_core_users do
-    # What data would a user have
-    # Twitter handle
-    :tushar
-  end
-
   def get_random_handle() do
     len = Enum.random(5..20)
     temp = :crypto.strong_rand_bytes(len) |> Base.url_encode64 |> binary_part(0, len)
