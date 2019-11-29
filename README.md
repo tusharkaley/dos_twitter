@@ -34,7 +34,13 @@ When the specified number of tweets are sent from each core user, the tracker se
 
 We have written tests for the following functionalities:
 # Tests
-- Add a user 
-- Delete a user
-- Follow a user (Subscribe to user's tweets)
-- Query using hashtag, mention
+1.	Add a user
+2.	Delete a user
+3.	Follow a user
+4.	Query using hashtag
+5.	Query using mentions
+6.	Get all tweets
+7.	Get my notifications
+8.	Deliver tweets to the tweeter’s followers if they are alive
+9.	Save tweets to the tweeter’s followers’ table if they are alive
+
