@@ -32,7 +32,8 @@ defmodule TwitterClasses.Simulator do
     def handle_info({:high_freq_tweet,power_users}, node_state) do
       user = Enum.random(power_users)
       {:ok, user} = Enum.fetch(user, 0)
-      if TwitterClasses.Utils.toss_coin() == 1 do
+      num_tweets= :ets.tab2list(:tweets)
+      if TwitterClasses.Utils.toss_coin() == 1 or length(num_tweets) == 0 do
         TwitterClasses.Core.tweet(user)
       else
         TwitterClasses.Core.retweet(user)
@@ -45,8 +46,8 @@ defmodule TwitterClasses.Simulator do
 
       user = Enum.random(slow_users)
       {:ok, user} = Enum.fetch(user, 0)
-
-      if TwitterClasses.Utils.toss_coin() == 1 do
+      num_tweets= :ets.tab2list(:tweets)
+      if TwitterClasses.Utils.toss_coin() == 1 or length(num_tweets) == 0 do
         TwitterClasses.Core.tweet(user)
       else
         TwitterClasses.Core.retweet(user)
