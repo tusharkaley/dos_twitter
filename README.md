@@ -26,3 +26,10 @@ When a user sends out a tweet, the followers are notified,
 
 Exit condition:
 When the specified number of tweets are sent, the tracker sends the terminate message and we stop the supervisor.
+
+We have written tests for the following functionalities:
+# Tests
+- Add a user 
+- Delete a user
+- Follow a user
+- Query using hashtag, mention
