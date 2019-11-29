@@ -158,5 +158,94 @@ doctest TwitterClasses.Core
 
   end
 
+  test "Tweet when subscriber is not live" do
+    #data for test
+    TwitterClasses.DBUtils.create_table(:aux_info)
+    # Creating tweet tables
+    TwitterClasses.DBUtils.create_table(:tweets)
+    TwitterClasses.DBUtils.create_table(:hashtags)
+    TwitterClasses.DBUtils.create_table(:mentions)
+    TwitterClasses.DBUtils.create_table(:user_tweets)
+    TwitterClasses.DBUtils.create_table(:user_followers)
+    TwitterClasses.DBUtils.create_table(:user_notifications)
+    TwitterClasses.DBUtils.create_table(:user_wall)
+    TwitterClasses.DBUtils.create_table(:users)
+
+    
+    # add handles to the aux_info table
+    user_handle = "user"
+    follower_handle = "follower"
+    handles = [user_handle, follower_handle]
+    TwitterClasses.DBUtils.add_to_table(:aux_info, {:user_handles, handles})
+    
+ 
+
+    TwitterClasses.Supervisor.start_link()
+
+    {:ok, pid1} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 1, :start => {TwitterClasses.Core, :start_link, [2, user_handle, 10]}, :restart => :transient,:type => :worker})
+    {:ok, pid2} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 4, :start => {TwitterClasses.Core, :start_link, [3, follower_handle, 10]}, :restart => :transient,:type => :worker})
+    {:ok, agg} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => :tracker, :start => {TwitterClasses.Tracker, :start_link, [5, "tracker"]}, :restart => :transient,:type => :worker})
+   
+    TwitterClasses.DBUtils.add_to_table(:users, {pid2, true, false, 1, follower_handle})
+    handle_to_pid = %{follower_handle=> pid2, user_handle => pid1}
+    TwitterClasses.DBUtils.add_to_table(:aux_info, {:handle_to_pid, handle_to_pid})
+    #user 2 follows 1
+    IO.puts "Testing "
+    user_followers = %{pid1 => [pid2]}
+    TwitterClasses.DBUtils.add_to_table(:user_followers, {"user_followers",user_followers})
+    TwitterClasses.Core.tweet(pid1)
+    
+    Process.sleep(100)
+
+    {pid,wall} = TwitterClasses.DBUtils.get_from_table(:user_wall, pid2)
+    {hash,user_id} = List.first wall
+    assert user_id == pid1 and pid == pid2
+    Supervisor.stop(TwitterClasses.Supervisor)
+  end
+
+  
+  test "Tweet when subscriber is live" do
+    #data for test
+    TwitterClasses.DBUtils.create_table(:aux_info)
+    # Creating tweet tables
+    TwitterClasses.DBUtils.create_table(:tweets)
+    TwitterClasses.DBUtils.create_table(:hashtags)
+    TwitterClasses.DBUtils.create_table(:mentions)
+    TwitterClasses.DBUtils.create_table(:user_tweets)
+    TwitterClasses.DBUtils.create_table(:user_followers)
+    TwitterClasses.DBUtils.create_table(:user_notifications)
+    TwitterClasses.DBUtils.create_table(:user_wall)
+    TwitterClasses.DBUtils.create_table(:users)
+
+    
+    # add handles to the aux_info table
+    user_handle = "user"
+    follower_handle = "follower"
+    handles = [user_handle, follower_handle]
+    TwitterClasses.DBUtils.add_to_table(:aux_info, {:user_handles, handles})
+    
+    TwitterClasses.Supervisor.start_link()
+
+    {:ok, pid1} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 7, :start => {TwitterClasses.Core, :start_link, [9, user_handle, 10]}, :restart => :transient,:type => :worker})
+    {:ok, pid2} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => 8, :start => {TwitterClasses.Core, :start_link, [0, follower_handle, 10]}, :restart => :transient,:type => :worker})
+    {:ok, agg} = Supervisor.start_child(TwitterClasses.Supervisor, %{:id => :tracker, :start => {TwitterClasses.Tracker, :start_link, [1, "track"]}, :restart => :transient,:type => :worker})
+   
+    TwitterClasses.DBUtils.add_to_table(:users, {pid2, true, true, 1, follower_handle})
+    handle_to_pid = %{follower_handle=> pid2, user_handle => pid1}
+    TwitterClasses.DBUtils.add_to_table(:aux_info, {:handle_to_pid, handle_to_pid})
+    #user 2 follows 1
+    IO.puts "Testing "
+    user_followers = %{pid1 => [pid2]}
+    TwitterClasses.DBUtils.add_to_table(:user_followers, {"user_followers",user_followers})
+    TwitterClasses.Core.tweet(pid1)
+    
+    Process.sleep(100)
+    IO.puts "Heree"
+    IO.inspect TwitterClasses.DBUtils.get_from_table(:user_wall, pid2)
+    {pid,wall} = TwitterClasses.DBUtils.get_from_table(:user_wall, pid2)
+    {hash,user_id} = List.first wall
+    assert user_id == pid1 and pid == pid2
+    Supervisor.stop(TwitterClasses.Supervisor)
+  end
 
 end
